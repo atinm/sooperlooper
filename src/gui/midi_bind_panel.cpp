@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 #include <wx/wx.h>
@@ -44,6 +44,7 @@ enum {
 	ID_LearnButton,
 	ID_ControlCombo,
 	ID_LoopNumCombo,
+	ID_BindingSetCombo,
 	ID_ChanSpin,
 	ID_TypeCombo,
 	ID_ParamSpin,
@@ -76,12 +77,12 @@ BEGIN_EVENT_TABLE(SooperLooperGui::MidiBindPanel, wxPanel)
 	EVT_BUTTON (ID_ClearAllButton, SooperLooperGui::MidiBindPanel::on_button)
 	EVT_BUTTON (ID_LoadButton, SooperLooperGui::MidiBindPanel::on_button)
 	EVT_BUTTON (ID_SaveButton, SooperLooperGui::MidiBindPanel::on_button)
-	
+
 	EVT_CHOICE(ID_ControlCombo, SooperLooperGui::MidiBindPanel::on_combo)
-	
+
 	EVT_SIZE (SooperLooperGui::MidiBindPanel::onSize)
 	EVT_PAINT (SooperLooperGui::MidiBindPanel::onPaint)
-	
+
 END_EVENT_TABLE()
 
 static const wxString CcString(wxT("CC"));
@@ -94,7 +95,7 @@ static const wxString PcString(wxT("PC"));
 static const wxString PitchBendString(wxT("Pitch Bend"));
 static const wxString KeyPressureString(wxT("Key Pressure"));
 static const wxString ChannelPressureString(wxT("Channel Pressure"));
-	
+
 static int wxCALLBACK list_sort_callback (long item1, long item2, long sortData)
 {
 
@@ -104,7 +105,7 @@ static int wxCALLBACK list_sort_callback (long item1, long item2, long sortData)
 	return info1->control > info2->control;
 }
 
-	
+
 // ctor(s)
 MidiBindPanel::MidiBindPanel(MainPanel * mainpan, wxWindow * parent, wxWindowID id,
 		       const wxPoint& pos,
@@ -138,12 +139,12 @@ void MidiBindPanel::onPaint(wxPaintEvent &ev)
 		int width,height, cwidth;
 
 		_justResized = false;
-		
+
 		_listctrl->GetClientSize(&width, &height);
 
 		cwidth = _listctrl->GetColumnWidth(0);
 		_listctrl->SetColumnWidth(3, width-cwidth);
-		
+
 	}
 
 	ev.Skip();
@@ -156,21 +157,21 @@ void MidiBindPanel::init()
 
 	_listctrl = new wxListCtrl(this, ID_ListCtrl, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxLC_SINGLE_SEL|wxSUNKEN_BORDER);
 	_listctrl->InsertColumn(0, wxT("Control"));
-	_listctrl->InsertColumn(1, wxT("Loop#"));
-	_listctrl->InsertColumn(2, wxT("Midi Event"));
-	_listctrl->InsertColumn(3, wxT("Range"));
+	_listctrl->InsertColumn(1, wxT("Binding Set"));
+	_listctrl->InsertColumn(2, wxT("Loop#"));
+	_listctrl->InsertColumn(3, wxT("Midi Event"));
+	_listctrl->InsertColumn(4, wxT("Range"));
 
 	_listctrl->SetColumnWidth(0, 180);
-	_listctrl->SetColumnWidth(1, 60);
-	_listctrl->SetColumnWidth(2, 100);
-	
-	
+	_listctrl->SetColumnWidth(1, 100);
+	_listctrl->SetColumnWidth(2, 60);
+	_listctrl->SetColumnWidth(3, 100);
 
 	wxBoxSizer * buttsizer = new wxBoxSizer(wxHORIZONTAL);
 
 	wxButton * butt = new wxButton (this, ID_SaveButton, wxT("Save..."));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
-	
+
 	butt = new wxButton (this, ID_LoadButton, wxT("Load..."));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
 
@@ -178,23 +179,23 @@ void MidiBindPanel::init()
 	buttsizer->Add (_append_check, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 3);
 
 	buttsizer->Add (1,-1,1, wxALL, 0);
-	
+
 	butt = new wxButton (this, ID_ClearAllButton, wxT("Clear All"));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_RIGHT, 3);
-	
+
 	topsizer->Add (buttsizer, 0, wxLEFT|wxTOP|wxRIGHT|wxEXPAND, 4);
 
 	// add list
 	topsizer->Add (_listctrl, 1, wxEXPAND|wxALL, 4);
 
 
-	
+
 	_edit_panel = new wxPanel(this, -1);
 	wxBoxSizer * editsizer = new wxBoxSizer(wxHORIZONTAL);
 
 	wxStaticBox * shotBox = new wxStaticBox(_edit_panel, -1, wxT("Command/Control"), wxDefaultPosition, wxDefaultSize);
         wxStaticBoxSizer * colsizer = new wxStaticBoxSizer(shotBox, wxVERTICAL);
-	
+
 	//wxBoxSizer * colsizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer * rowsizer;
 	wxStaticText * staticText;
@@ -206,6 +207,21 @@ void MidiBindPanel::init()
 	//_control_combo->SetSelection(0);
 	colsizer->Add (_control_combo, 0, wxALL|wxALIGN_CENTRE|wxEXPAND, 2);
 	_control_combo->SetWindowVariant(wxWINDOW_VARIANT_NORMAL);
+
+
+	rowsizer = new wxBoxSizer(wxHORIZONTAL);
+	staticText = new wxStaticText(_edit_panel, -1, wxT("Binding Set"), wxDefaultPosition, wxSize(-1, -1), wxALIGN_LEFT);
+	staticText->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+	rowsizer->Add (staticText, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+
+	_bindingSet_combo =  new wxChoice(_edit_panel, ID_BindingSetCombo, wxDefaultPosition, wxSize(100, -1), 0, 0);
+	_bindingSet_combo->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+	for (int i=0; i <= 1; ++i) {
+		_bindingSet_combo->Append (wxString::Format(wxT("%d"), i), (void *) i);
+	}
+	_bindingSet_combo->SetSelection(0);
+	rowsizer->Add (_bindingSet_combo, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
+	colsizer->Add (rowsizer, 0, wxALL|wxEXPAND, 0);
 
 	rowsizer = new wxBoxSizer(wxHORIZONTAL);
 	staticText = new wxStaticText(_edit_panel, -1, wxT("Loop #"), wxDefaultPosition, wxSize(-1, -1), wxALIGN_LEFT);
@@ -228,17 +244,17 @@ void MidiBindPanel::init()
 	_sus_check->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 
 	rowsizer->Add (_sus_check, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
-	
+
 	colsizer->Add (rowsizer, 0, wxALL|wxEXPAND, 0);
 
-	editsizer->Add (colsizer, 0, wxALL|wxEXPAND, 4);
+	editsizer->Add (colsizer, 0, wxALL|wxEXPAND, 5);
 
-	
-	
+
+
 	// midi event stuff
 	shotBox = new wxStaticBox(_edit_panel, -1, wxT("MIDI Event"), wxDefaultPosition, wxDefaultSize);
         colsizer = new wxStaticBoxSizer(shotBox, wxVERTICAL);
-	
+
 	//staticText = new wxStaticText(_edit_panel, -1, "MIDI Event", wxDefaultPosition, wxSize(-1, -1), wxALIGN_CENTRE);
 	//colsizer->Add (staticText, 0, wxALL|wxALIGN_CENTRE, 2);
 
@@ -251,7 +267,7 @@ void MidiBindPanel::init()
 	_chan_spin =  new wxSpinCtrl(_edit_panel, ID_ChanSpin, wxT("1"), wxDefaultPosition, wxSize(50,-1), wxSP_ARROW_KEYS, 1, 16, 1, wxT("KeyAware"));
 	_chan_spin->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 	rowsizer->Add (_chan_spin, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
-	
+
 	_type_combo = new wxChoice(_edit_panel, ID_TypeCombo,  wxDefaultPosition, wxSize(100, -1), 0, 0);
 	_type_combo->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 	//_control_combo->SetToolTip(wxT("Choose control or command"));
@@ -310,7 +326,7 @@ void MidiBindPanel::init()
         _range_panel->SetSizer( rowsizer );      // actually set the sizer
 	rowsizer->SetSizeHints( _range_panel );   // set size hints to honour mininum size
 	rowsizer->Fit(_range_panel);
-	
+
 	colsizer->Add (_range_panel, 0, wxALL|wxEXPAND, 0);
 
 
@@ -336,20 +352,20 @@ void MidiBindPanel::init()
         _data_range_panel->SetSizer( rowsizer );      // actually set the sizer
 	//rowsizer->SetSizeHints( _range_panel );   // set size hints to honour mininum size
 	//rowsizer->Fit(_data_range_panel);
-	
+
 	colsizer->Add (_data_range_panel, 0, wxALL|wxEXPAND, 0);
 
-	
+
 	editsizer->Add (colsizer, 1, wxALL|wxEXPAND, 4);
 
-	
-	
-	
+
+
+
 	_edit_panel->SetAutoLayout( true );     // tell dialog to use sizer
 	_edit_panel->SetSizer( editsizer );      // actually set the sizer
 	editsizer->SetSizeHints( _edit_panel );   // set size hints to honour mininum size
 	editsizer->Fit(_edit_panel);
-	
+
 	topsizer->Add (_edit_panel, 0, wxEXPAND|wxALL, 1);
 
 
@@ -358,19 +374,19 @@ void MidiBindPanel::init()
 
 	butt = new wxButton (this, ID_AddButton, wxT("Add New"));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
-	
+
 	butt = new wxButton (this, ID_RemoveButton, wxT("Remove"));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
 
 	buttsizer->Add (10, 1, 0);
-	
+
 	butt = new wxButton (this, ID_ModifyButton, wxT("Modify"));
 	buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
 
 
 	//buttsizer->Add (1,-1,1, wxALL, 0);
-	
-	
+
+
 	//butt = new wxButton (this, ID_CloseButton, wxT("Close"));
 	//buttsizer->Add (butt, 0, wxALL|wxALIGN_CENTRE, 3);
 
@@ -383,7 +399,7 @@ void MidiBindPanel::init()
 	_parent->get_loop_control().NextMidiCancelled.connect (mem_fun (*this, &MidiBindPanel::cancelled_next_midi));
 
 	refresh_state();
-	
+
 	this->SetAutoLayout( true );     // tell dialog to use sizer
 	this->SetSizer( topsizer );      // actually set the sizer
 	//topsizer->Fit( this );            // set size to minimum size as calculated by the sizer
@@ -394,7 +410,7 @@ void MidiBindPanel::populate_controls()
 {
 	// add all known controls to combo
 	CommandMap & cmap = CommandMap::instance();
-	
+
 	cmap.get_commands(_cmdlist);
 	cmap.get_controls(_ctrlist);
 
@@ -419,8 +435,8 @@ void MidiBindPanel::populate_controls()
 			_control_combo->Append (wxString::Format(wxT("[g. ctrl]  %s"), wxString::FromAscii(iter->c_str()).c_str()), (void *) (iter->c_str()));
 		}
 	}
-	
-	
+
+
 }
 
 void MidiBindPanel::cancelled_next_midi()
@@ -438,12 +454,13 @@ void MidiBindPanel::recvd_next_midi(SooperLooper::MidiBindInfo & info)
 		ninfo.channel = info.channel;
 		ninfo.param = info.param;
 		ninfo.type = info.type;
+		ninfo.set = info.set;
 
 		update_entry_area (&ninfo);
-		
+
 		_learn_button->SetLabel (wxT("Learn"));
 		_learn_button->SetForegroundColour (*wxBLACK); // todo default
-		
+
 		_learning = false;
 	}
 
@@ -474,15 +491,15 @@ void MidiBindPanel::refresh_state()
 
 	_bind_list.clear();
 
-	
+
 	_parent->get_loop_control().midi_bindings().get_bindings(_bind_list);
-	
+
 	int itemid = 0;
-	
+
 	for (MidiBindings::BindingList::iterator biter = _bind_list.begin(); biter != _bind_list.end(); ++biter)
 	{
 		MidiBindInfo & info = (*biter);
-		
+
 		// control
 		item.SetId(itemid);
 		item.SetColumn(0);
@@ -491,8 +508,13 @@ void MidiBindPanel::refresh_state()
 
 		_listctrl->InsertItem (item);
 
-		// loop #
+		// binding setting
 		item.SetColumn(1);
+		item.SetText (wxString::Format(wxT("%d"), info.set));
+		_listctrl->SetItem (item);
+
+		// loop #
+		item.SetColumn(2);
 		item.SetText (wxString::Format(wxT("%d"), info.instance + 1));
 		if (info.instance == -1) {
 			item.SetText (wxT("All"));
@@ -506,17 +528,17 @@ void MidiBindPanel::refresh_state()
 		_listctrl->SetItem (item);
 
 		// midi event
-		item.SetColumn(2);
+		item.SetColumn(3);
 		item.SetText (wxString::Format(wxT("ch%d - %s - %d"), info.channel+1, wxString::FromAscii(info.type.c_str()).c_str(), info.param));
 		_listctrl->SetItem (item);
 
 		// range
-		item.SetColumn(3);
+		item.SetColumn(4);
 		if (info.command == "set") {
 			item.SetText (wxString::Format(wxT("%g - %g  (%d - %d)  %s"), info.lbound, info.ubound,
-						       info.data_min, info.data_max, 
-						       info.style == MidiBindInfo::GainStyle ? wxT("gain") : 
-						       ( info.style == MidiBindInfo::ToggleStyle ? wxT("togg") : 
+						       info.data_min, info.data_max,
+						       info.style == MidiBindInfo::GainStyle ? wxT("gain") :
+						       ( info.style == MidiBindInfo::ToggleStyle ? wxT("togg") :
 							 ( info.style == MidiBindInfo::IntegerStyle ? wxT("int") :  wxT("") ))));
 		}
 		else {
@@ -528,13 +550,13 @@ void MidiBindPanel::refresh_state()
 			}
 		}
 		_listctrl->SetItem (item);
-		
+
 
 		itemid++;
 	}
 
 	_listctrl->SortItems (list_sort_callback, (unsigned long) _listctrl);
-	
+
 	for (long i=0; i < _listctrl->GetItemCount(); ++i) {
 		item.SetId(i);
 		item.SetColumn(0);
@@ -549,13 +571,13 @@ void MidiBindPanel::refresh_state()
 			}
 		}
 	}
-	
+
 // 	if (selexists) {
 // 		_edit_panel->Enable(true);
 // 	} else {
 // 		_edit_panel->Enable(false);
 // 	}
-	
+
 }
 
 
@@ -586,6 +608,7 @@ void MidiBindPanel::update_entry_area(MidiBindInfo * usethis)
 	}
 
 	_loopnum_combo->SetSelection(info->instance + 3);
+	_bindingSet_combo->SetSelection(info->set);
 	_chan_spin->SetValue(info->channel + 1);
 
 	if (info->type == "cc") {
@@ -625,13 +648,13 @@ void MidiBindPanel::update_entry_area(MidiBindInfo * usethis)
 
 		_lbound_ctrl->SetValue (wxString::Format(wxT("%g"), info->lbound));
 		_ubound_ctrl->SetValue (wxString::Format(wxT("%g"), info->ubound));
-		
+
 		_data_min_ctrl->SetValue (wxString::Format(wxT("%d"), info->data_min));
 		_data_max_ctrl->SetValue (wxString::Format(wxT("%d"), info->data_max));
 	}
 	else {
-		_range_panel->Enable(false); 
-		_data_range_panel->Enable(false); 
+		_range_panel->Enable(false);
+		_data_range_panel->Enable(false);
 		if (info->command == "susnote") {
 			_sus_check->SetValue(true);
 		}
@@ -641,11 +664,11 @@ void MidiBindPanel::update_entry_area(MidiBindInfo * usethis)
 
 		_lbound_ctrl->SetValue (wxT(""));
 		_ubound_ctrl->SetValue (wxT(""));
-		
+
 		_data_min_ctrl->SetValue (wxT(""));
 		_data_max_ctrl->SetValue (wxT(""));
 	}
-	
+
 	_param_spin->SetValue(info->param);
 
 
@@ -661,7 +684,7 @@ void MidiBindPanel::update_entry_area(MidiBindInfo * usethis)
 	else {
 		_style_combo->SetSelection(0);
 	}
-	
+
 }
 
 void MidiBindPanel::update_curr_binding()
@@ -673,7 +696,7 @@ void MidiBindPanel::update_curr_binding()
 	if (_control_combo->GetSelection() < 0) {
 		return;
 	}
-	
+
 	// take info from editpanel and set the MidiBindInfo
 	_currinfo.control = static_cast<const char *>(_control_combo->GetClientData(_control_combo->GetSelection()));
 	_currinfo.channel = _chan_spin->GetValue() - 1;
@@ -685,7 +708,13 @@ void MidiBindPanel::update_curr_binding()
 		_currinfo.instance = -1;
 	}
 
-	
+	if (_bindingSet_combo->GetSelection() >= 0) {
+		_currinfo.set = (int) (long) _bindingSet_combo->GetClientData(_bindingSet_combo->GetSelection());
+	}
+	else {
+		_currinfo.set = 0;
+	}
+
 	wxString tsel = _type_combo->GetStringSelection();
 	if (tsel == NoteString) {
 		_currinfo.type = "n";
@@ -733,14 +762,14 @@ void MidiBindPanel::update_curr_binding()
 	}
 	else {
 		_currinfo.command = "set";
-			
+
 		// control
 		if (cmap.is_global_control(_currinfo.control)) {
 			_currinfo.instance = -2;
 		}
 	}
 
-	
+
 	_currinfo.param = _param_spin->GetValue();
 
 	if (tsel == PitchBendString || tsel == ChannelPressureString) {
@@ -792,7 +821,7 @@ void MidiBindPanel::update_curr_binding()
 	else {
 		_currinfo.style = MidiBindInfo::NormalStyle;
 	}
-	
+
 }
 
 void MidiBindPanel::on_combo (wxCommandEvent &ev)
@@ -839,7 +868,7 @@ void MidiBindPanel::on_button (wxCommandEvent &ev)
 	else if (ev.GetId() == ID_LearnButton) {
 		if (!_learning) {
 			update_curr_binding();
-			
+
 			_learn_button->SetLabel (wxT("C. Learn"));
 			_learn_button->SetForegroundColour (*wxRED);
 			_learning = true;
@@ -849,7 +878,7 @@ void MidiBindPanel::on_button (wxCommandEvent &ev)
 			//_learn_button->SetLabel (wxT("Learn"));
 			//_learn_button->SetForegroundColour (*wxBLACK); // todo default
 			//_learning = false;
-			
+
 			_parent->get_loop_control().cancel_next_midi_event();
 		}
 	}
@@ -903,7 +932,7 @@ void MidiBindPanel::on_button (wxCommandEvent &ev)
 		ev.Skip();
 	}
 }
-				   
+
 
 void MidiBindPanel::item_selected (wxListEvent & ev)
 {
@@ -912,7 +941,7 @@ void MidiBindPanel::item_selected (wxListEvent & ev)
 
 	update_entry_area();
 	update_curr_binding();
-	
+
 }
 
 void MidiBindPanel::learning_stopped ()
@@ -925,5 +954,3 @@ void MidiBindPanel::learning_stopped ()
 
 	//_listctrl->SetFocus();
 }
-	
-	

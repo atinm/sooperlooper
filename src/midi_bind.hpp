@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 #ifndef __sooperlooper_midi_bind__
@@ -34,22 +34,22 @@ namespace SooperLooper {
 class MidiBindInfo
 {
 public:
-	
+
 	enum Style {
 		NormalStyle = 0,
 		GainStyle = 1,
 		ToggleStyle = 2,
 		IntegerStyle = 3
 	};
-	
-	MidiBindInfo() : data_min(0), data_max(127) {}
-	MidiBindInfo (int chan, std::string tp, std::string cmd, std::string ctrl, int instc, float lbnd=0.0f, float ubnd=1.0f, Style styl=NormalStyle, int dmin=0, int dmax=127)
+
+	MidiBindInfo() : data_min(0), data_max(127), set(0) {}
+	MidiBindInfo (int chan, std::string tp, std::string cmd, std::string ctrl, int instc, float lbnd=0.0f, float ubnd=1.0f, Style styl=NormalStyle, int dmin=0, int dmax=127, int set=0)
 		: channel(chan), type(tp), command(cmd), control(ctrl), instance(instc),
-		  lbound(lbnd), ubound(ubnd),  data_min(dmin), data_max(dmax), style(styl) {}
+		  lbound(lbnd), ubound(ubnd),  data_min(dmin), data_max(dmax), style(styl), set(set) {}
 
 	inline bool operator==(const MidiBindInfo &) const;
 
-	
+
 	std::string serialize() const;
 	bool unserialize(std::string);
 
@@ -58,19 +58,19 @@ public:
 	std::string command;
 	std::string control;
 	int         param;
-	
+
 	int         instance;
-	
+
 	// target value bounds
 	float       lbound;
 	float       ubound;
-	
+
 	// incoming event value bounds
 	int         data_min;
 	int         data_max;
 
 	Style       style;
-
+	int					set;
 	// internal state for toggle style
 	float       last_toggle_val;
 };
@@ -82,17 +82,18 @@ public:
 		    command == other.command &&
 		    control == other.control &&
 		    param  == other.param &&
-		    instance == other.instance)
+		    instance == other.instance &&
+				set == other.set)
 		{
 			return true;
 		}
-		    
+
 		return false;
 	}
-	
 
 
-	
+
+
 class MidiBindings
 {
 public:
@@ -117,21 +118,25 @@ public:
 	int binding_key (const MidiBindInfo & info) const;
 	bool get_channel_and_type(MIDI::byte chcmd, int & ch, std::string & type) const;
 
-	// the int key here is  (chcmd << 8) | param
+	int current_set() const;
+	void select_set(int set);
+	void select_alternate_set();
+
+	// the int key here is  (chcmd << 12) | param << 4 | set
 	// or midi byte 1 and 2 in 16 bits
 	typedef std::map<int, BindingList> BindingsMap;
-	
+
 	// for direct use... be careful
 	BindingsMap & bindings_map() { return _bindings; }
-	
+
 protected:
 
-	
 	typedef std::map<std::string, int> TypeMap;
 	TypeMap _typemap;
-	
+
 	BindingsMap _bindings;
-	
+	int _set;
+
 
 };
 

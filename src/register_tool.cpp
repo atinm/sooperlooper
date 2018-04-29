@@ -22,11 +22,11 @@ public:
    std::string  _our_url;
 
 	RegisterTool(const string & target_port, const string & sl_port, const string & target_host="localhost") {
-		
+
 		_osc_addr = lo_address_new(NULL, sl_port.c_str());
 
 		char tmpbuf[100];
-		snprintf(tmpbuf, sizeof(tmpbuf), "osc.udp://%s:%s", target_host.c_str(), target_port.c_str()); 
+		snprintf(tmpbuf, sizeof(tmpbuf), "osc.udp://%s:%s", target_host.c_str(), target_port.c_str());
 		_our_url = tmpbuf;
 	}
 
@@ -36,7 +36,7 @@ register_global_updates(const string & path="/ctrl", bool unreg=false)
 	char buf[50];
 
 	if (!_osc_addr) return;
-	
+
 	if (unreg) {
 		snprintf(buf, sizeof(buf), "/unregister_update");
 
@@ -59,7 +59,8 @@ register_global_updates(const string & path="/ctrl", bool unreg=false)
 	lo_send(_osc_addr, buf, "sss", "send_midi_start_on_trigger", _our_url.c_str(), path.c_str());
 	lo_send(_osc_addr, buf, "sss", "smart_eighths", _our_url.c_str(), path.c_str());
 	lo_send(_osc_addr, buf, "sss", "selected_loop_num", _our_url.c_str(), path.c_str());
-	
+	lo_send(_osc_addr, buf, "sss", "midi_select_alternate_bindings", _our_url.c_str(), path.c_str());
+
 	if (unreg) {
 		lo_send(_osc_addr, "/unregister_auto_update", "siss", "in_peak_meter", 100, _our_url.c_str(), path.c_str());
 		lo_send(_osc_addr, "/unregister_auto_update", "siss", "out_peak_meter", 100, _our_url.c_str(), path.c_str());
@@ -112,7 +113,7 @@ register_auto_updates(int index, const string & path, bool unreg=false)
 		lo_send(_osc_addr, buf, "siss", "pitch_shift", 100, _our_url.c_str(), path.c_str());
 	}
 
-	
+
 
 }
 
@@ -128,7 +129,7 @@ register_input_controls(int index, const std::string & path="/ctrl", bool unreg=
 	} else {
 		snprintf(buf, sizeof(buf), "/sl/%d/register_update", index);
 	}
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", "rec_thresh", _our_url.c_str(), path.c_str());
 	lo_send(_osc_addr, buf, "sss", "feedback", _our_url.c_str(), path.c_str());
@@ -172,14 +173,14 @@ register_control (int index, std::string ctrl, const string & path, bool unreg=f
 	if (!_osc_addr) return;
 
 	char buf[30];
-	
+
 	if (unreg) {
 		snprintf(buf, sizeof(buf), "/sl/%d/unregister_update", index);
 
 	} else {
 		snprintf(buf, sizeof(buf), "/sl/%d/register_update", index);
 	}
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", (const char *) ctrl.c_str(), _our_url.c_str(), path.c_str());
 
@@ -216,13 +217,13 @@ int main(int argc, char ** argv)
 	RegisterTool regtool(targ_port, sl_port, targ_host);
 
 	regtool.register_global_updates("/sl/global", unreg);
-	
+
 	char pathstr[30];
 	for (int i=0; i < 8; ++i) {
 		snprintf(pathstr, sizeof(pathstr), "/sl/%d/ctrl", i);
 		regtool.register_auto_updates(i, pathstr, unreg);
 		regtool.register_input_controls(i, pathstr, unreg);
 	}
-	
+
 	return 0;
 }

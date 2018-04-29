@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 #ifndef __sooperlooper_midi_bridge__
@@ -51,11 +51,11 @@ class MidiBridge
 	MidiBridge (std::string name);
 	MidiBridge (std::string name, MIDI::PortRequest & req);
 	MidiBridge (std::string name, std::string oscurl, MIDI::PortRequest & req);
-	virtual ~MidiBridge();			
+	virtual ~MidiBridge();
 
 	MidiBindings & bindings() { return _midi_bindings; }
 	PBD::NonBlockingLock & bindings_lock() { return _bindings_lock; }
-	
+
 	virtual bool is_ok() { return _ok; }
 
 	void start_learn (MidiBindInfo & info, bool exclus=false);
@@ -63,7 +63,7 @@ class MidiBridge
 
 	void start_get_next ();
 	void cancel_get_next ();
-	
+
 	sigc::signal1<void, MidiBindInfo> BindingLearned;
 	sigc::signal1<void, MidiBindInfo> NextMidiReceived;
 
@@ -72,7 +72,7 @@ class MidiBridge
 	sigc::signal5<void, Event::type_t, Event::control_t, float, int8_t, long> MidiControlEvent;
 
 	sigc::signal3<void, Event::control_t, long, MIDI::timestamp_t> MidiSyncEvent;
-	
+
 
 	void inject_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long framepos=-1);
 
@@ -82,19 +82,23 @@ class MidiBridge
 	MIDI::timestamp_t get_current_host_time();
 
 	void set_output_midi_clock(bool flag) { _output_clock = flag; }
-	
+
 	void set_feedback_out(bool flag) { _feedback_out = flag; }
 	bool get_feedback_out() const { return _feedback_out; }
 
 	void parameter_changed(int ctrl_id, int instance, Engine *engine);
 
+  int get_current_binding_set() const;
+	void select_alternate_binding_set();
+	void select_binding_set(int set);
+
   protected:
 	bool init_thread();
 	void terminate_midi_thread();
 	void poke_midi_thread();
-	
+
 	void incoming_midi (MIDI::Parser &p, MIDI::byte *msg, size_t len, MIDI::timestamp_t timestamp);
-	
+
 	void queue_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long framepos=-1, MIDI::timestamp_t timestamp=0);
 
 
@@ -103,7 +107,7 @@ class MidiBridge
 	void stop_midireceiver ();
 
 	void finish_learn(MIDI::byte chcmd, MIDI::byte param, MIDI::byte val);
-	
+
 
 	bool init_clock_thread();
 	void terminate_clock_thread();
@@ -117,12 +121,12 @@ class MidiBridge
   private:
 
 	void send_event (const MidiBindInfo & info, float val, long framepos=-1);
-	
+
 
 	MidiBindings _midi_bindings;
-	
+
 	MIDI::Port * _port;
-	
+
 	lo_address _addr;
 
 	int                _midi_request_pipe[2];
@@ -148,7 +152,7 @@ class MidiBridge
 	MidiBindInfo _learninfo;
 	bool _ok;
 	bool _feedback_out;
-	
+
 };
 
 };

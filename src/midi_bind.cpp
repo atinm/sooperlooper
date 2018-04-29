@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 
@@ -47,6 +47,7 @@ MidiBindings::MidiBindings()
 	_typemap["cp"] = MIDI::chanpress;
 	_typemap["ccon"] = MIDI::controller;
 	_typemap["ccoff"] = MIDI::controller;
+	_set = 0;
 
 	// temp bindings
 // 	_bindings[0x9000 | 48] = MidiBindInfo("note", "record", -1);
@@ -77,10 +78,10 @@ MidiBindings::get_bindings (BindingList & blist) const
 {
 	for (BindingsMap::const_iterator biter = _bindings.begin(); biter != _bindings.end(); ++biter) {
 		const BindingList & elist = (*biter).second;
-		
+
 		for (BindingList::const_iterator eiter = elist.begin(); eiter != elist.end(); ++eiter) {
 			const MidiBindInfo & info = (*eiter);
-			
+
 			blist.push_back (info);
 		}
 	}
@@ -93,7 +94,7 @@ MidiBindings::get_channel_and_type(byte chcmd, int & ch, string & type) const
 	byte cmd = chcmd & 0xf0;
 	bool found = false;
 
-	
+
 	for (TypeMap::const_iterator titer = _typemap.begin(); titer != _typemap.end(); ++titer)
 	{
 		if ((*titer).second == cmd) {
@@ -117,9 +118,9 @@ MidiBindings::binding_key (const MidiBindInfo & info) const
 		//cerr << "invalid midi type str: " << info.type << endl;
 		return 0;
 	}
-	
+
 	typei = titer->second;
-	key = ((typei + info.channel) << 8) | info.param;
+	key = ((typei + info.channel) << 12) | info.param << 4 | info.set;
 
 	return key;
 }
@@ -129,10 +130,10 @@ MidiBindings::add_binding (const MidiBindInfo & info, bool exclusive)
 {
 	///  type->typei is { pc = 0xc0 , cc = 0xb0 , on = 0x80 , n = 0x90 , pb = 0xe0 }
 	// chcmd = cmd + ch
-	// lookup key = (chcmd << 8) | param
+	// lookup key = (chcmd << 12) | param << 4 | set
 
 	int key;
-	
+
 	if ((key = binding_key (info)) == 0) {
 		return false;
 	}
@@ -147,10 +148,10 @@ MidiBindings::add_binding (const MidiBindInfo & info, bool exclusive)
 		//cerr << "cleared existing" << endl;
 		_bindings[key].clear();
 	}
-	
+
 	_bindings[key].push_back (info);
-	// cerr << "added binding: " << info.type << "  "  << info.control << "  " << info.instance << "  " << info.lbound << "  " << info.ubound << endl;
-	
+	cerr << "added binding: " << info.type << "  "  << info.control << "  " << info.instance << "  " << info.lbound << "  " << info.ubound << " " << info.set << endl;
+
 	// cerr << "added binding: " << info.serialize() << endl;
 	return true;
 }
@@ -159,7 +160,7 @@ bool
 MidiBindings::remove_binding (const MidiBindInfo & info)
 {
 	int key;
-	
+
 	if ((key = binding_key (info)) == 0) {
 		return false;
 	}
@@ -183,7 +184,7 @@ MidiBindings::remove_binding (const MidiBindInfo & info)
 	if (blist.empty()) {
 		_bindings.erase(biter);
 	}
-	
+
 	return true;
 }
 
@@ -201,7 +202,7 @@ MidiBindings::load_bindings (string filename, bool append)
 	ifstream bindfile;
 
 	bindfile.open(filename.c_str(), ios::in);
-	
+
 	if (!bindfile.is_open()) {
 		cerr << "sooperlooper warning: could not open for reading: " << filename << endl;
 		return false;
@@ -217,17 +218,17 @@ MidiBindings::load_bindings (std::istream & instream, bool append)
 {
 	char  line[200];
 
-	
+
 	if (!append) {
 		clear_bindings();
 	}
 
 	while ( ! instream.eof())
 		//while (fgets (line, sizeof(line), bindfile) != NULL)
-		
+
 	{
 	        instream.getline (line, sizeof(line));
-		
+
 		// ignore empty lines and # lines
 		if (line[0] == '\n' || line[0] == '#' || line[0] == '\0') {
 			continue;
@@ -259,10 +260,10 @@ bool MidiBindings::save_bindings (string filename)
 
 bool MidiBindings::save_bindings (std::ostream & outstream)
 {
-	
+
 	for (BindingsMap::const_iterator biter = _bindings.begin(); biter != _bindings.end(); ++biter) {
 		const BindingList & elist = (*biter).second;
-		
+
 		for (BindingList::const_iterator eiter = elist.begin(); eiter != elist.end(); ++eiter) {
 			const MidiBindInfo & info = (*eiter);
 
@@ -273,7 +274,21 @@ bool MidiBindings::save_bindings (std::ostream & outstream)
 	return true;
 }
 
+int MidiBindings::current_set() const
+{
+	return _set;
+}
 
+void MidiBindings::select_set(int set)
+{
+	if ((set >= 0) && (set <= 1))
+		_set = set;
+}
+
+void MidiBindings::select_alternate_set()
+{
+	_set = (_set == 0) ? 1 : 0;
+}
 
 string MidiBindInfo::serialize() const
 {
@@ -289,8 +304,9 @@ string MidiBindInfo::serialize() const
 	//    instance is loop #
 	//    min_val_bound is what to treat midi val 0
 	//    max_val_bound is what to treat midi val 127
-	//    valstyle can be 'gain' or 'toggle'
+	//    valstyle can be 'gain', 'toggle', 'integer', 'norm'
 	//    min_data and max_data can be integer values from 0 to 127
+	//    set is which binding set - 0 to 15
 
 	char buf[100];
 	char stylebuf[20];
@@ -305,11 +321,11 @@ string MidiBindInfo::serialize() const
 		strncpy(stylebuf, "norm", sizeof(stylebuf));
 	}
 
-	// i:ch s:type i:param  s:cmd  s:ctrl i:instance f:min_val_bound f:max_val_bound s:valstyle i:min_data i:max_data
-	snprintf(buf, sizeof(buf), "%d %s %d  %s %s %d  %.9g %.9g  %s %d %d",
+	// i:ch s:type i:param  s:cmd  s:ctrl i:instance f:min_val_bound f:max_val_bound s:valstyle i:min_data i:max_data i:set
+	snprintf(buf, sizeof(buf), "%d %s %d  %s %s %d  %.9g %.9g  %s %d %d %d",
 		 channel, type.c_str(), param, command.c_str(),
-		 control.c_str(), instance, lbound, ubound, stylebuf, data_min, data_max);
-	
+		 control.c_str(), instance, lbound, ubound, stylebuf, data_min, data_max, set);
+
 	return string(buf);
 }
 
@@ -326,15 +342,16 @@ bool MidiBindInfo::unserialize(string strval)
 	float ub = 1.0f;
 	int dmin = 0;
 	int dmax = 127;
+	int s = 0;
 
 	int ret;
 
 	stylestr[0] = '\0';
 
 	if (strval.empty()) return false;
-	
-	if ((ret = sscanf(strval.c_str(), "%d %5s %d  %30s %30s %d  %g %g  %10s %d %d",
-			  &chan, tp, &parm, cmd, ctrl, &inst, &lb, &ub, stylestr, &dmin, &dmax)) < 5)
+
+	if ((ret = sscanf(strval.c_str(), "%d %5s %d  %30s %30s %d  %g %g  %10s %d %d %d",
+			  &chan, tp, &parm, cmd, ctrl, &inst, &lb, &ub, stylestr, &dmin, &dmax, &s)) < 5)
 	{
 		cerr << "ret: " << ret << " invalid input line: " << strval << endl;
 		return false;
@@ -350,6 +367,7 @@ bool MidiBindInfo::unserialize(string strval)
 	ubound = ub;
 	data_min = dmin;
 	data_max = dmax;
+	set = s;
 
 	if (stylestr[0] == 'g') {
 		style = GainStyle;
@@ -362,6 +380,6 @@ bool MidiBindInfo::unserialize(string strval)
 	} else {
 		style = NormalStyle;
 	}
-	
+
 	return true;
 }

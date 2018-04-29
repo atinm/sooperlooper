@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 #include "command_map.hpp"
@@ -37,7 +37,7 @@ CommandMap::CommandMap()
 	_str_type_map["get"]  = Event::type_control_request;
 	_str_type_map["g_set"]  = Event::type_global_control_change;
 	_str_type_map["sync"]  = Event::type_sync;
-	
+
 	for (StringTypeMap::iterator iter = _str_type_map.begin(); iter != _str_type_map.end(); ++iter) {
 		_type_str_map[(*iter).second] = (*iter).first;
 	}
@@ -66,14 +66,14 @@ CommandMap::CommandMap()
 	_str_cmd_map["solo"]  = Event::SOLO;
 	_str_cmd_map["solo_next"]  = Event::SOLO_NEXT;
 	_str_cmd_map["solo_prev"]  = Event::SOLO_PREV;
-	_str_cmd_map["record_solo"]  = Event::RECORD_SOLO;	
-	_str_cmd_map["record_solo_next"]  = Event::RECORD_SOLO_NEXT;	
-	_str_cmd_map["record_solo_prev"]  = Event::RECORD_SOLO_PREV;	
+	_str_cmd_map["record_solo"]  = Event::RECORD_SOLO;
+	_str_cmd_map["record_solo_next"]  = Event::RECORD_SOLO_NEXT;
+	_str_cmd_map["record_solo_prev"]  = Event::RECORD_SOLO_PREV;
 	_str_cmd_map["set_sync_pos"]  = Event::SET_SYNC_POS;
 	_str_cmd_map["reset_sync_pos"]  = Event::RESET_SYNC_POS;
 	_str_cmd_map["record_or_overdub"]  = Event::RECORD_OR_OVERDUB;
-	_str_cmd_map["record_exclusive"]  = Event::RECORD_EXCLUSIVE;	
-	_str_cmd_map["record_exclusive_next"]  = Event::RECORD_EXCLUSIVE_NEXT;	
+	_str_cmd_map["record_exclusive"]  = Event::RECORD_EXCLUSIVE;
+	_str_cmd_map["record_exclusive_next"]  = Event::RECORD_EXCLUSIVE_NEXT;
 	_str_cmd_map["record_exclusive_prev"]  = Event::RECORD_EXCLUSIVE_PREV;
 	_str_cmd_map["record_or_overdub_excl"]  = Event::RECORD_OR_OVERDUB_EXCL;
 	_str_cmd_map["record_or_overdub_excl_next"]  = Event::RECORD_OR_OVERDUB_EXCL_NEXT;
@@ -84,7 +84,7 @@ CommandMap::CommandMap()
 	_str_cmd_map["record_or_overdub_solo_trig"]  = Event::RECORD_OR_OVERDUB_SOLO_TRIG;
 	_str_cmd_map["record_overdub_end_solo"]  = Event::RECORD_OVERDUB_END_SOLO;
 	_str_cmd_map["record_overdub_end_solo_trig"]  = Event::RECORD_OVERDUB_END_SOLO_TRIG;
-	
+
 	for (StringCommandMap::iterator iter = _str_cmd_map.begin(); iter != _str_cmd_map.end(); ++iter) {
 		_cmd_str_map[(*iter).second] = (*iter).first;
 	}
@@ -123,14 +123,14 @@ CommandMap::CommandMap()
 	add_input_control("pan_3", Event::PanChannel3, UnitGeneric, 0.0f, 1.0f, 0.5f);
 	add_input_control("pan_4", Event::PanChannel4, UnitGeneric, 0.0f, 1.0f, 0.5f);
 	add_input_control("stretch_ratio", Event::StretchRatio, UnitRatio, 0.5f, 4.0f, 1.0f);
-	add_input_control("pitch_shift", Event::PitchShift, UnitSemitones, -12.0f, 12.0f, 0.0f); 
+	add_input_control("pitch_shift", Event::PitchShift, UnitSemitones, -12.0f, 12.0f, 0.0f);
 	add_input_control("tempo_stretch", Event::TempoStretch, UnitBoolean);
 	add_input_control("round_integer_tempo", Event::RoundIntegerTempo, UnitBoolean);
 	add_input_control("jack_timebase_master", Event::JackTimebaseMaster, UnitBoolean);
 
 	_str_ctrl_map.insert (_input_controls.begin(), _input_controls.end());
 
-	
+
 	// outputs
 	add_output_control("waiting", Event::Waiting, UnitBoolean);
 	add_output_control("state", Event::State, UnitIndexed, -1.0f, 20.0f);
@@ -155,7 +155,7 @@ CommandMap::CommandMap()
 	_event_controls["midi_tick"] = Event::MidiTick;
 
 	_str_ctrl_map.insert (_event_controls.begin(), _event_controls.end());
-	
+
 	// global params
 	add_global_control("tempo", Event::Tempo, UnitTempo, 0.0f, 1000.0f, 120.0f);
 	add_global_control("eighth_per_cycle", Event::EighthPerCycle, UnitIndexed, 0.0, 2048.0f);
@@ -172,6 +172,8 @@ CommandMap::CommandMap()
 	add_global_control("use_midi_start", Event::UseMidiStart, UnitBoolean, 0.0f, 1.0f, 1.0f);
 	add_global_control("use_midi_stop", Event::UseMidiStop, UnitBoolean, 0.0f, 1.0f, 1.0f);
 	add_global_control("send_midi_start_on_trigger", Event::SendMidiStartOnTrigger, UnitBoolean, 0.0f, 1.0f, 1.0f);
+	add_global_control("midi_select_alernate_bindings", Event::MidiSelectAlternateBindings);
+
 	_str_ctrl_map.insert (_global_controls.begin(), _global_controls.end());
 
 	// reverse it
@@ -179,7 +181,7 @@ CommandMap::CommandMap()
 		_ctrl_str_map[(*iter).second] = (*iter).first;
 	}
 
-	
+
 }
 
 void CommandMap::get_commands (list<std::string> & cmdlist)
@@ -213,21 +215,21 @@ bool CommandMap::get_control_info(const std::string & ctrl, ControlInfo & info)
 	return false;
 }
 
-void CommandMap::add_input_control(const std::string & name, Event::control_t ctrl, 
+void CommandMap::add_input_control(const std::string & name, Event::control_t ctrl,
 				   ControlUnit unit, float minVal, float maxVal, float defaultVal)
 {
 	_input_controls[name] = ctrl;
 	_ctrl_info_map[name] = ControlInfo(name, ctrl, unit, minVal, maxVal, defaultVal);
 }
 
-void CommandMap::add_output_control(const std::string & name, Event::control_t ctrl, 
+void CommandMap::add_output_control(const std::string & name, Event::control_t ctrl,
 			       ControlUnit unit, float minVal, float maxVal, float defaultVal)
 {
 	_output_controls[name] = ctrl;
 	_ctrl_info_map[name] = ControlInfo(name, ctrl, unit, minVal, maxVal, defaultVal);
 }
 
-void CommandMap::add_global_control(const std::string & name, Event::control_t ctrl, 
+void CommandMap::add_global_control(const std::string & name, Event::control_t ctrl,
 				   ControlUnit unit, float minVal, float maxVal, float defaultVal)
 {
 	_global_controls[name] = ctrl;

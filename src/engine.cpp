@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 #include <iostream>
 
@@ -107,7 +107,7 @@ Engine::Engine ()
 	_loop_manage_to_main_queue = 0;
 
 	_solo_down_stamp = 1 << 31;
-	
+
 	_use_sync_start = false;
 	_use_sync_stop = false;
 	_send_midi_start_on_trigger = false;
@@ -132,7 +132,7 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 
 	_driver = driver;
 	_driver->set_engine(this);
-	
+
 	if (!_driver->initialize()) {
 		cerr << "cannot connect to audio driver" << endl;
 		return false;
@@ -143,9 +143,9 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 	_common_input_buffers.clear();
 	_common_outputs.clear();
 	_common_inputs.clear();
-	
+
 	// create common io ports
-	for (int i=0; i < buschans; ++i) 
+	for (int i=0; i < buschans; ++i)
 	{
 		snprintf(tmpstr, sizeof(tmpstr), "common_in_%d", i+1);
 		if (_driver->create_input_port (tmpstr, tmpport)) {
@@ -158,17 +158,17 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 		_temp_input_buffers.push_back(inbuf);
 
 		_common_input_buffers.push_back(0); // fill to correct size
-		
+
 		snprintf(tmpstr, sizeof(tmpstr), "common_out_%d", i+1);
 		if (_driver->create_output_port (tmpstr, tmpport)) {
 			_common_outputs.push_back (tmpport);
 		}
-		
+
 		// create temp output buffer
 		sample_t * outbuf = new float[driver->get_buffersize()];
 		memset(outbuf, 0, sizeof(float) * driver->get_buffersize());
 		_temp_output_buffers.push_back(outbuf);
-		
+
 		_common_output_buffers.push_back(0); // fill to correct size
 	}
 
@@ -187,7 +187,7 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 	// reserve space in instance vectors to try to be RT safe
 	_instances.reserve(128);
 	_rt_instances.reserve(128);
-	
+
 	_internal_sync_buf = new float[driver->get_buffersize()];
 	memset(_internal_sync_buf, 0, sizeof(float) * driver->get_buffersize());
 
@@ -196,7 +196,7 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 	_longpress_frames = (nframes_t) lrint (driver->get_samplerate() * 1.0);
 
 	calculate_tempo_frames();
-	
+
 	_osc = new ControlOSC(this, port);
 
 	if (!_osc->is_ok()) {
@@ -204,7 +204,7 @@ bool Engine::initialize(AudioDriver * driver, int buschans, int port, string pin
 	}
 
 	_driver->ConnectionsChanged.connect(mem_fun(*this, &Engine::connections_changed));
-	
+
 	_ok = true;
 
 	return true;
@@ -228,7 +228,7 @@ Engine::cleanup()
 		delete _midi_event_queue;
 		_midi_event_queue = 0;
 	}
-	
+
 	if (_sync_queue) {
 		delete _sync_queue;
 		_sync_queue = 0;
@@ -243,7 +243,7 @@ Engine::cleanup()
 		delete _nonrt_update_event_queue;
 		_nonrt_update_event_queue = 0;
 	}
-	
+
 	if (_event_generator) {
 		delete _event_generator;
 		_event_generator = 0;
@@ -264,7 +264,7 @@ Engine::cleanup()
 	}
 
 	// delete temp common input buffers
-	for (vector<sample_t *>::iterator iter = _temp_input_buffers.begin(); iter != _temp_input_buffers.end(); ++iter) 
+	for (vector<sample_t *>::iterator iter = _temp_input_buffers.begin(); iter != _temp_input_buffers.end(); ++iter)
 	{
 		sample_t * inbuf = *iter;
 		if (inbuf) {
@@ -272,9 +272,9 @@ Engine::cleanup()
 		}
 	}
 	_temp_input_buffers.clear();
-	
+
 	// delete temp common input buffers
-	for (vector<sample_t *>::iterator iter = _temp_output_buffers.begin(); iter != _temp_output_buffers.end(); ++iter) 
+	for (vector<sample_t *>::iterator iter = _temp_output_buffers.begin(); iter != _temp_output_buffers.end(); ++iter)
 	{
 		sample_t * inbuf = *iter;
 		if (inbuf) {
@@ -282,7 +282,7 @@ Engine::cleanup()
 		}
 	}
 	_temp_output_buffers.clear();
-	
+
 	// safe to do this, we assume all RT activity has stopped here
     for (Instances::iterator iter = _instances.begin(); iter != _instances.end(); ++iter) {
 		delete *iter;
@@ -292,7 +292,7 @@ Engine::cleanup()
 
 	_driver = 0;
 	_ok = false;
-	
+
 }
 
 Engine::~Engine ()
@@ -324,7 +324,7 @@ void Engine::quit(bool force)
 	if (!force && _ignore_quit) {
 		return;
 	}
-	
+
 	_ok = false;
 
 	LockMonitor mon(_event_loop_lock, __LINE__, __FILE__);
@@ -390,7 +390,7 @@ Engine::buffersize_changed (nframes_t nframes)
 {
 	if (_buffersize != nframes)
 	{
-		
+
 		// called from the audio thread callback
 		size_t m = 0;
 		for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i, ++m)
@@ -399,7 +399,7 @@ Engine::buffersize_changed (nframes_t nframes)
 		}
 
 		// resize temp inbuf and sync buf
-		for (int n=0; n < 2; ++n) 
+		for (int n=0; n < 2; ++n)
 		{
 			delete [] _temp_input_buffers[n];
 			delete [] _temp_output_buffers[n];
@@ -435,7 +435,7 @@ Engine::connections_changed()
 	_conns_changed = true;
 }
 
-void 
+void
 Engine::fill_common_outs(nframes_t nframes)
 {
 	sample_t * outbuf, * real_outbuf;
@@ -445,20 +445,20 @@ Engine::fill_common_outs(nframes_t nframes)
 	float currdry = 1.0f, currwet = 1.0f;
 	float inpeak = _common_input_peak;
 	float outpeak = _common_output_peak;
-	
+
 	// do fixed peak meter falloff
 	inpeak = flush_to_zero (f_clamp (DB_CO (CO_DB(inpeak) - nframes * _falloff_per_sample), 0.0f, 20.0f));
 	outpeak = flush_to_zero (f_clamp (DB_CO (CO_DB(outpeak) - nframes * _falloff_per_sample), 0.0f, 20.0f));
-	
+
 	// assume ins and out count the same
-	for (size_t i=0; i < _common_outputs.size(); ++i) 
+	for (size_t i=0; i < _common_outputs.size(); ++i)
 	{
 		currdry = _curr_common_dry;
 		currwet = _curr_common_wet;
 		inbuf = _common_input_buffers[i]; // use true common input (not gain attenuated)
 		real_outbuf = _common_output_buffers[i];
 		if (_use_temp_input) {
-			outbuf = _temp_output_buffers[i]; // use temp outputs 
+			outbuf = _temp_output_buffers[i]; // use temp outputs
 		}
 		else {
 			outbuf = _common_output_buffers[i];
@@ -475,7 +475,7 @@ Engine::fill_common_outs(nframes_t nframes)
 
 			// outpeak is taken post dry/wet mix for true output metering
 			outpeak = f_max (outpeak, fabsf(real_outbuf[n]));
-			
+
 		}
 	}
 
@@ -492,36 +492,36 @@ Engine::fill_common_outs(nframes_t nframes)
 	_common_input_peak = inpeak;
 }
 
-void 
+void
 Engine::prepare_buffers(nframes_t nframes)
 {
 	sample_t * outbuf, *inbuf;
 	float ing_delta = flush_to_zero(_target_input_gain - _curr_input_gain) / max((nframes_t) 1, (nframes - 1));
 	float curr_ing = _curr_input_gain;
-	
-	for (size_t i=0; i < _common_outputs.size(); ++i) 
+
+	for (size_t i=0; i < _common_outputs.size(); ++i)
 	{
 		sample_t * real_inbuf = _driver->get_input_port_buffer (_common_inputs[i], _driver->get_buffersize());
 		outbuf = _driver->get_output_port_buffer (_common_outputs[i], _driver->get_buffersize());
-		
+
 		//if (real_inbuf != outbuf) {
 		//	memset (outbuf, 0, nframes * sizeof(sample_t));
 		//}
 
 		memset (_temp_output_buffers[i], 0, nframes * sizeof(sample_t));
-		
+
 		// attenuate common inputs
 
 		_common_output_buffers[i] = outbuf;
 		_common_input_buffers[i] = real_inbuf; // for use later in the process cycle
 		inbuf = _temp_input_buffers[i];
 		curr_ing = _curr_input_gain;
-		
+
 		for (nframes_t n = 0; n < nframes; ++n) {
 			curr_ing += ing_delta;
 			inbuf[n] = real_inbuf[n] * curr_ing;
 		}
-		
+
 	}
 
 	_curr_input_gain = flush_to_zero (curr_ing);
@@ -529,7 +529,7 @@ Engine::prepare_buffers(nframes_t nframes)
 		// force to == target
 		_curr_input_gain = _target_input_gain;
 	}
-	
+
 }
 
 
@@ -537,19 +537,19 @@ bool
 Engine::add_loop (unsigned int chans, float loopsecs, bool discrete)
 {
 	int n;
-	
+
 	n = _instances.size();
-	
+
 	Looper * instance;
-	
+
 	instance = new Looper (_driver, (unsigned int) n, chans, loopsecs, discrete || _force_discrete);
-	
+
 	if (!(*instance)()) {
 		cerr << "can't create a new loop!\n";
 		delete instance;
 		return false;
 	}
-	
+
 	// set some initial controls
 	float quantize_value = QUANT_OFF;
 	float round_value = 0.0f;
@@ -566,7 +566,7 @@ Engine::add_loop (unsigned int chans, float loopsecs, bool discrete)
         odubquant =_instances[0]->get_control_value (Event::OverdubQuantized);
         replquant =_instances[0]->get_control_value (Event::ReplaceQuantized) > 0.0;
 	}
-	
+
 	instance->set_port (Quantize, quantize_value);
 	instance->set_port (Round, round_value);
 	instance->set_port (RelativeSync, relative_sync);
@@ -580,7 +580,7 @@ bool
 Engine::add_loop (Looper * instance)
 {
 	_instances.push_back (instance);
-	
+
 	bool val = _auto_disable_latency && _target_common_dry > 0.0f;
 	instance->set_disable_latency_compensation (val);
 	instance->set_port (EighthPerCycleLoop, _eighth_cycle);
@@ -593,7 +593,7 @@ Engine::add_loop (Looper * instance)
 	// now we push the added loop to the RT thread
 	LoopManageEvent lmev(LoopManageEvent::AddLoop, instance);
 	push_loop_manage_to_rt (lmev);
-	
+
 	return true;
 }
 
@@ -612,32 +612,32 @@ Engine::remove_loop (Looper * looper)
 			_instances.erase(iter);
 		}
 	}
-	
+
 	delete looper;
 
 	LoopRemoved(); // emit
-	
+
 	update_sync_source();
 
 	if (_selected_loop >= (int) _instances.size()) {
 		_selected_loop = 0;
 	}
 
-	
+
 	return true;
 }
 
-size_t 
+size_t
 Engine::get_loop_channel_count (size_t instance, bool realtime)
 {
 	if (realtime) {
-		if (instance < _rt_instances.size()) 
+		if (instance < _rt_instances.size())
 			return _rt_instances[instance]->get_channel_count();
 	} else {
-		if (instance < _instances.size()) 
+		if (instance < _instances.size())
 			return _instances[instance]->get_channel_count();
 	}
-	
+
 	return 0;
 }
 
@@ -673,7 +673,7 @@ static inline Event * next_rt_event (RingBuffer<Event>::rw_vector & vec, size_t 
 {
 	Event * e1 = 0;
 	Event * e2 = 0;
-	
+
 	if (pos < vec.len[0]) {
 		e1 = &vec.buf[0][pos];
 	}
@@ -711,18 +711,18 @@ static inline Event * next_rt_event (RingBuffer<Event>::rw_vector & vec, size_t 
 
 	return 0;
 }
-	
+
 void Engine::process_rt_loop_manage_events ()
 {
 	// pull off all loop management events from the main thread
 	LoopManageEvent * lmevt;
-	
+
 	while (is_ok() && _loop_manage_to_rt_queue->read_space() > 0)
 	{
 		RingBuffer<LoopManageEvent>::rw_vector vec;
 		_loop_manage_to_rt_queue->get_read_vector(&vec);
 		lmevt = vec.buf[0];
-		
+
 		// we must remove/add this loop from our copy of the vector
 		if (lmevt->etype == LoopManageEvent::RemoveLoop)
 		{
@@ -736,10 +736,10 @@ void Engine::process_rt_loop_manage_events ()
 					_rt_instances.erase(iter);
 				}
 			}
-			
+
 			// signal mainloop it is safe to delete
 			push_loop_manage_to_main (*lmevt);
-			
+
 		}
 		else if (lmevt->etype == LoopManageEvent::AddLoop)
 		{
@@ -753,10 +753,10 @@ void Engine::process_rt_loop_manage_events ()
 			// signal main loop
 			push_loop_manage_to_main (*lmevt);
 		}
-		
+
 		_loop_manage_to_rt_queue->increment_read_ptr(1);
 	}
-	
+
 }
 
 
@@ -778,17 +778,17 @@ Engine::process (nframes_t nframes)
 	// get available events
 	_event_queue->get_read_vector (&vec);
 	_midi_event_queue->get_read_vector (&midivec);
-		
+
 	// update event generator
 	_event_generator->updateFragmentTime (nframes);
 
 	// process loop instance rt events
 	process_rt_loop_manage_events();
-	
+
 	// update internal sync
 	calculate_tempo_frames ();
 	generate_sync (0, nframes);
-	
+
 	// clear common output buffers
 	prepare_buffers (nframes);
 
@@ -799,13 +799,13 @@ Engine::process (nframes_t nframes)
 	size_t midi_n = 0;
 	int fragpos;
 	int m, syncm;
-	
+
 	if (num > 0) {
 
 		evt = next_rt_event (vec, n, midivec, midi_n);
-		
+
 		while (evt)
-		{ 
+		{
 			fragpos = (nframes_t) evt->FragmentPos();
 
 			if (fragpos < (int) usedframes || fragpos >= (int) nframes) {
@@ -820,7 +820,7 @@ Engine::process (nframes_t nframes)
 			doframes = fragpos - usedframes;
 
 			// handle special global RT events
-			if (evt->Instance == -2 
+			if (evt->Instance == -2
 			    || evt->Command == Event::SOLO
 			    || evt->Command == Event::SOLO_NEXT
 			    || evt->Command == Event::SOLO_PREV
@@ -841,7 +841,7 @@ Engine::process (nframes_t nframes)
 			    || evt->Command == Event::RECORD_OR_OVERDUB_SOLO_PREV )
 			{
 				do_global_rt_event (evt, usedframes + doframes, nframes - (usedframes + doframes));
-				
+
 				// force the position and do frames to non-zero for these to ensure synced records
 				if (doframes == 0) {
 					doframes = 1;
@@ -851,19 +851,19 @@ Engine::process (nframes_t nframes)
 			m = 0;
 			syncm = -1;
 
-			
+
 			if ((int)_sync_source > 0 && (int)_sync_source <= (int)_rt_instances.size()) {
 				// we need to run the sync source loop first
 				syncm = (int) _sync_source - 1;
 				_rt_instances[syncm]->run (usedframes, doframes);
-				
+
 				if (evt->Instance == -1 || evt->Instance == syncm ||
 				    (evt->Instance == -3 && (_selected_loop == syncm || _selected_loop == -1))) {
 					_rt_instances[syncm]->do_event (evt);
 
 					// if event command is trigger and send_midi_start_on_trigger is enabled, do so
 					if (evt->Command == Event::TRIGGER
-					    && (evt->Type == Event::type_cmd_down || evt->Type == Event::type_cmd_hit)) 
+					    && (evt->Type == Event::type_cmd_down || evt->Type == Event::type_cmd_hit))
 					{
 						//cerr << "YES, send now" << endl;
 						if (_midi_bridge) {
@@ -876,17 +876,17 @@ Engine::process (nframes_t nframes)
 				}
 			}
 
-			
+
 			for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i, ++m)
 			{
 				if (syncm == m) continue; // skip if we already ran it
-				
+
 				// run for the time before this event
 
 				(*i)->run (usedframes, doframes);
-					
+
 				// process event
-				if (evt->Instance == -1 || evt->Instance == m || 
+				if (evt->Instance == -1 || evt->Instance == m ||
 				    (evt->Instance == -3 && (_selected_loop == m || _selected_loop == -1))) {
 					(*i)->do_event (evt);
 				}
@@ -896,8 +896,8 @@ Engine::process (nframes_t nframes)
 
 			// event is committed, if it is a control event, push it onto the nonrt update queue
 			if (evt->Type == Event::type_control_change || evt->Type == Event::type_global_control_change) {
-				do_push_control_event (_nonrt_update_event_queue, 
-				                       evt->Type, evt->Control, evt->Value, 
+				do_push_control_event (_nonrt_update_event_queue,
+				                       evt->Type, evt->Control, evt->Value,
 				                       evt->Instance, evt->source);
 			}
 
@@ -917,8 +917,8 @@ Engine::process (nframes_t nframes)
 			syncm = (int) _sync_source - 1;
 			_rt_instances[syncm]->run (usedframes, nframes - usedframes);
 		}
-		
-		
+
+
 		// run the rest of the frames
 		for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i ,++m) {
 			if (syncm == m) continue;
@@ -932,7 +932,7 @@ Engine::process (nframes_t nframes)
 
 		int m = 0;
 		int syncm = -1;
-		
+
 		if ((int)_sync_source > 0 && (int) _sync_source <= (int)_rt_instances.size()) {
 			// we need to run the sync source loop first
 			syncm = (int) _sync_source - 1;
@@ -950,38 +950,38 @@ Engine::process (nframes_t nframes)
 	fill_common_outs (nframes);
 
 	_running_frames += nframes;
-	
+
 	return 0;
 }
 
 void
 Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 {
-	bool exclcmd         = (   ev->Command == Event::RECORD_EXCLUSIVE_NEXT 
-	                        || ev->Command == Event::RECORD_EXCLUSIVE_PREV 
+	bool exclcmd         = (   ev->Command == Event::RECORD_EXCLUSIVE_NEXT
+	                        || ev->Command == Event::RECORD_EXCLUSIVE_PREV
 	                        || ev->Command == Event::RECORD_EXCLUSIVE);
 
-	bool exclocmd        = (   ev->Command == Event::RECORD_OR_OVERDUB_EXCL_NEXT 
-	                        || ev->Command == Event::RECORD_OR_OVERDUB_EXCL_PREV 
-	                        || ev->Command == Event::RECORD_OR_OVERDUB_EXCL); 
+	bool exclocmd        = (   ev->Command == Event::RECORD_OR_OVERDUB_EXCL_NEXT
+	                        || ev->Command == Event::RECORD_OR_OVERDUB_EXCL_PREV
+	                        || ev->Command == Event::RECORD_OR_OVERDUB_EXCL);
 
-	bool recOverSoloNext = (   ev->Command == Event::RECORD_OR_OVERDUB_SOLO_NEXT 
+	bool recOverSoloNext = (   ev->Command == Event::RECORD_OR_OVERDUB_SOLO_NEXT
 	                        || ev->Command == Event::RECORD_OR_OVERDUB_SOLO_PREV);
 
-	bool recOverSolo     = (   ev->Command == Event::RECORD_OR_OVERDUB_SOLO 
-	                        || ev->Command == Event::RECORD_OR_OVERDUB_SOLO_TRIG 
-	                        || ev->Command == Event::RECORD_OVERDUB_END_SOLO 
-	                        || ev->Command == Event::RECORD_OVERDUB_END_SOLO_TRIG  
+	bool recOverSolo     = (   ev->Command == Event::RECORD_OR_OVERDUB_SOLO
+	                        || ev->Command == Event::RECORD_OR_OVERDUB_SOLO_TRIG
+	                        || ev->Command == Event::RECORD_OVERDUB_END_SOLO
+	                        || ev->Command == Event::RECORD_OVERDUB_END_SOLO_TRIG
 	                        || recOverSoloNext);
 
 	if (ev->Control == Event::TapTempo) {
 		nframes_t thisframe = _running_frames + offset;
 		if (thisframe > _last_tempo_frame) {
-			double ntempo = ((double) _driver->get_samplerate() / (double)(thisframe - _last_tempo_frame)) * 60.0f; 
+			double ntempo = ((double) _driver->get_samplerate() / (double)(thisframe - _last_tempo_frame)) * 60.0f;
 
 			//cerr << "TAP: new tempo: " << _tempo  << "  off: " << offset << endl;
 			ntempo = avg_tempo(ntempo);
-			
+
 			set_tempo(ntempo, true);
 			calculate_tempo_frames ();
 
@@ -995,15 +995,15 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 			//if (mon.locked()) {
 			pthread_cond_signal (&_event_cond);
 			//}
-			
+
 		}
-		
+
 		_last_tempo_frame = thisframe;
 	}
 	else if (ev->Control == Event::DryLevel)
 	{
 		if (ev->Value != _target_common_dry) {
-			
+
 			// if > 0 and auto_disable_latency is enabled, disable compensation for each loop
 			//   otherwise, enable compensation
 
@@ -1018,9 +1018,9 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 
 			_target_common_dry = ev->Value;
 		}
-		
+
 	}
-	else if (ev->Command == Event::SOLO 
+	else if (ev->Command == Event::SOLO
 	      || ev->Command == Event::SOLO_NEXT
 	      || ev->Command == Event::SOLO_PREV
 	      || ev->Command == Event::RECORD_SOLO_NEXT
@@ -1030,18 +1030,18 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 	{
 		// notify all loops they are being soloed or not (this acts as a toggle)
 		int target_instance = (ev->Instance == -3) ? _selected_loop : ev->Instance;
-		
+
 		if (ev->Type == Event::type_cmd_down || ev->Type == Event::type_cmd_hit || ev->Type == Event::type_cmd_upforce
 		    || (ev->Type == Event::type_cmd_up && _running_frames > (_solo_down_stamp + _longpress_frames)))
-		{	
-			if (ev->Command == Event::SOLO_NEXT ||  ev->Command == Event::RECORD_SOLO_NEXT 
+		{
+			if (ev->Command == Event::SOLO_NEXT ||  ev->Command == Event::RECORD_SOLO_NEXT
 				|| ev->Command == Event::RECORD_EXCLUSIVE_NEXT || ev->Command == Event::RECORD_OR_OVERDUB_EXCL_NEXT || ev->Command == Event::RECORD_OR_OVERDUB_SOLO_NEXT) {
 				// increment selected
 				_selected_loop = (_selected_loop + 1) % _rt_instances.size();
 				_sel_loop_changed = true;
 				target_instance = _selected_loop;
 			}
-			else if (ev->Command == Event::SOLO_PREV ||  ev->Command == Event::RECORD_SOLO_PREV 
+			else if (ev->Command == Event::SOLO_PREV ||  ev->Command == Event::RECORD_SOLO_PREV
 					 || ev->Command == Event::RECORD_EXCLUSIVE_PREV || ev->Command == Event::RECORD_OR_OVERDUB_EXCL_PREV || ev->Command == Event::RECORD_OR_OVERDUB_SOLO_PREV) {
 				// decrement selected
 				_selected_loop = _selected_loop > 0 ? _selected_loop - 1 : _rt_instances.size() - 1;
@@ -1056,9 +1056,9 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 		}
 
                 bool target_was_muted = false;
-		if (target_instance >= 0 && target_instance < (int) _rt_instances.size()) 
+		if (target_instance >= 0 && target_instance < (int) _rt_instances.size())
 		{
-			target_was_muted = _rt_instances[target_instance]->is_muted() &&  _rt_instances[target_instance]->has_loop(); 
+			target_was_muted = _rt_instances[target_instance]->is_muted() &&  _rt_instances[target_instance]->has_loop();
 
 			if (ev->Type == Event::type_cmd_down || ev->Type == Event::type_cmd_hit || ev->Type == Event::type_cmd_upforce
 			    || (ev->Type == Event::type_cmd_up && _running_frames > (_solo_down_stamp + _longpress_frames)))
@@ -1066,7 +1066,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 				if (exclcmd || exclocmd)
 				{
 					int n=0;
-					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i, ++n) 
+					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i, ++n)
 					{
 						if (n != target_instance) {
 							// if it is in any active state, finish that state
@@ -1074,12 +1074,12 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 						}
 					}
 				}
-				else 
+				else
 				{
 					// solo commands
 					bool target_solo_state = _rt_instances[target_instance]->is_soloed();
 					bool retrigger = (ev->Command == Event::RECORD_OR_OVERDUB_SOLO_TRIG || ev->Command == Event::RECORD_OVERDUB_END_SOLO_TRIG);
-					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i) 
+					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i)
 					{
 						if (recOverSolo) {
 						        // for this command we always want it to force solo on
@@ -1089,7 +1089,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 						}
 					}
 				}
-				
+
 				if (ev->Type == Event::type_cmd_down) {
 					_solo_down_stamp = _running_frames;
 				} else {
@@ -1097,7 +1097,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 				}
 			}
 		}
-		
+
 		if (ev->Command == Event::RECORD_SOLO_NEXT ||  ev->Command == Event::RECORD_SOLO_PREV || ev->Command == Event::RECORD_SOLO || exclcmd)
 		{
 			// change the instance to the target we soloed, and the command to record
@@ -1133,7 +1133,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 	{
 		_auto_disable_latency = ev->Value;
 		bool val = _auto_disable_latency && _target_common_dry > 0.0f;
-	
+
 		for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i) {
 			(*i)->set_disable_latency_compensation (val);
 		}
@@ -1190,7 +1190,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 			_sync_source = (SyncSourceType) (int) roundf(ev->Value);
 			update_sync_source();
 		}
-	}	
+	}
 	else if (ev->Control == Event::Tempo) {
 		if (ev->Value > 0.0f) {
 			set_tempo((double) ev->Value, false);
@@ -1199,7 +1199,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 	else if (ev->Control == Event::EighthPerCycle) {
 		if (ev->Value > 0.0f) {
 			_eighth_cycle = ev->Value;
-			
+
 			// update all loops
 			for (unsigned int n=0; n < _rt_instances.size(); ++n) {
 				_rt_instances[n]->set_port(EighthPerCycleLoop, _eighth_cycle);
@@ -1225,7 +1225,7 @@ Engine::do_global_rt_event (Event * ev, nframes_t offset, nframes_t nframes)
 		// apparently can only call the jack_timebase master from main thread
 	}
 }
-	
+
 bool Engine::push_loop_manage_to_rt (LoopManageEvent & lme)
 {
 	if (_loop_manage_to_rt_queue->write (&lme, 1) != 1) {
@@ -1253,7 +1253,7 @@ Engine::push_command_event (Event::type_t type, Event::command_t cmd, int8_t ins
 {
 	bool ret = do_push_command_event (_event_queue, type, cmd, instance);
 
-	
+
 	// this is a known race condition, if the osc thread is changing controls
 	// simultaneously.  it's just an update :)
 //	do_push_command_event (_nonrt_update_event_queue, type, cmd,instance);
@@ -1294,7 +1294,7 @@ Engine::do_push_command_event (RingBuffer<Event> * evqueue, Event::type_t type, 
 #endif
 		return false;
 	}
-	
+
 	Event * evt = vec.buf[0];
 	*evt = get_event_generator().createEvent(framepos);
 
@@ -1323,7 +1323,7 @@ Engine::do_push_control_event (RingBuffer<Event> * evqueue, Event::type_t type, 
 #endif
 		return false;
 	}
-	
+
 	Event * evt = vec.buf[0];
 	*evt = get_event_generator().createEvent(framepos);
 
@@ -1334,7 +1334,7 @@ Engine::do_push_control_event (RingBuffer<Event> * evqueue, Event::type_t type, 
 	evt->source = src;
 
 	evqueue->increment_write_ptr (1);
-	
+
 	return true;
 }
 
@@ -1352,7 +1352,7 @@ Engine::push_control_event (Event::type_t type, Event::control_t ctrl, float val
 	// wakeup nonrt loop... this lock should really not block... but still
 	TentativeLockMonitor mon(_event_loop_lock,  __LINE__, __FILE__);
 	pthread_cond_signal (&_event_cond);
-	
+
 }
 
 void
@@ -1376,12 +1376,12 @@ Engine::push_sync_event (Event::control_t ctrl, long framepos, MIDI::timestamp_t
 {
 	// todo support more than one simulataneous pusher safely
 
-	if (_sync_source != MidiClockSync 
+	if (_sync_source != MidiClockSync
 	    && (!_use_sync_stop || ctrl != Event::MidiStop)
 	    && (!_use_sync_start || ctrl != Event::MidiStart)) {
 		return;
 	}
-	
+
 	RingBuffer<Event>::rw_vector vec;
 
 	_sync_queue->get_write_vector (&vec);
@@ -1392,7 +1392,7 @@ Engine::push_sync_event (Event::control_t ctrl, long framepos, MIDI::timestamp_t
 #endif
 		return;
 	}
-	
+
 	Event * evt = vec.buf[0];
 	if (timestamp == 0) {
 		//fprintf(stderr, "creating sync event at frame %ld\n", framepos);
@@ -1406,7 +1406,7 @@ Engine::push_sync_event (Event::control_t ctrl, long framepos, MIDI::timestamp_t
 	evt->Control = ctrl;
 
 	_sync_queue->increment_write_ptr (1);
-	
+
 	return;
 }
 
@@ -1419,7 +1419,7 @@ Engine::load_midi_bindings (string filename, bool append, CommandMap & cmdmap)
 	std::ifstream bindfile;
 
 	bindfile.open(filename.c_str(), ios::in);
-	
+
 	if (!bindfile.is_open()) {
 		cerr << "sooperlooper warning: could not open for reading: " << filename << endl;
 		return false;
@@ -1438,17 +1438,17 @@ Engine::load_midi_bindings (std::istream & instream, bool append, CommandMap & c
 	if (!_midi_bridge) {
         return false;
     }
-    
+
 	if (!append) {
 		_midi_bridge->bindings().clear_bindings();
 	}
 
 	while ( ! instream.eof())
 		//while (fgets (line, sizeof(line), bindfile) != NULL)
-		
+
 	{
 	        instream.getline (line, sizeof(line));
-		
+
 		// ignore empty lines and # lines
 		if (line[0] == '\n' || line[0] == '#' || line[0] == '\0') {
 			continue;
@@ -1461,7 +1461,7 @@ Engine::load_midi_bindings (std::istream & instream, bool append, CommandMap & c
 		}
 
 		//initialize value for toggle with current value
-		if (info.style == MidiBindInfo::ToggleStyle) 
+		if (info.style == MidiBindInfo::ToggleStyle)
 			info.last_toggle_val = get_control_value(cmdmap.to_control_t(info.control), info.instance);
 
 		_midi_bridge->bindings().add_binding (info);
@@ -1475,7 +1475,7 @@ Engine::get_control_value (Event::control_t ctrl, int8_t instance)
 {
 	// not really anymore, this is only called from the nonrt work thread
 	// that does the allocating of instances
-	
+
 	if (instance == -3) {
 		instance = _selected_loop;
 	}
@@ -1503,7 +1503,7 @@ Engine::get_control_value (Event::control_t ctrl, int8_t instance)
 		}
 		else if (ctrl == Event::InputGain) {
 			return _curr_input_gain;
-		} 
+		}
 		else if (ctrl == Event::Tempo) {
 			return _tempo;
 		}
@@ -1550,7 +1550,7 @@ Engine::push_nonrt_event (EventNonRT * event)
 
         if (_nonrt_event_queue->write_space() > 0) {
                 _nonrt_event_queue->write(&event, 1);
-                
+
                 LockMonitor mon(_event_loop_lock,  __LINE__, __FILE__);
                 pthread_cond_signal (&_event_cond);
 
@@ -1562,13 +1562,13 @@ Engine::push_nonrt_event (EventNonRT * event)
         }
 }
 
-	
+
 void
 Engine::binding_learned(MidiBindInfo info)
 {
 	_learn_done = true;
 	_learninfo = info;
-	
+
 	LockMonitor mon(_event_loop_lock,  __LINE__, __FILE__);
 	pthread_cond_signal (&_event_cond);
 }
@@ -1578,7 +1578,7 @@ Engine::next_midi_received(MidiBindInfo info)
 {
 	_received_done = true;
 	_learninfo = info;
-	
+
 	LockMonitor mon(_event_loop_lock,  __LINE__, __FILE__);
 	pthread_cond_signal (&_event_cond);
 }
@@ -1593,7 +1593,7 @@ Engine::mainloop()
 	struct timeval auto_update_timer_v[AUTO_UPDATE_RANGE];
 	struct timeval timer_last[AUTO_UPDATE_RANGE];
 	int  wait_ret = 0;
-	
+
 	EventNonRT * event;
 	Event  * evt;
 	LoopManageEvent * lmevt;
@@ -1605,7 +1605,7 @@ Engine::mainloop()
 		auto_update_timer_v[i].tv_sec = 0;
 		auto_update_timer_v[i].tv_usec = ((AUTO_UPDATE_STEP*(i+1)))*1000;
 	}
-	
+
 	// non-rt event processing loop
 	while (is_ok())
 	{
@@ -1624,10 +1624,10 @@ Engine::mainloop()
 			{
 				handle_load_session_event();
 			}
-			
+
 			_loop_manage_to_main_queue->increment_read_ptr(1);
 		}
-		
+
 		// pull off all events from nonrt ringbuffer
 		while (is_ok() && _nonrt_event_queue->read_space() > 0 && _nonrt_event_queue->read(&event, 1) == 1)
 		{
@@ -1667,10 +1667,10 @@ Engine::mainloop()
 				cuev.source = evt->source;
 				_osc->finish_update_event (cuev);
 			}
-			
+
 			_nonrt_update_event_queue->increment_read_ptr(1);
 		}
-		
+
 		if (!is_ok()) break;
 
 		// handle special requests from the audio thread
@@ -1697,7 +1697,7 @@ Engine::mainloop()
 			// just use some unique number
 			ConfigUpdateEvent cu_event(ConfigUpdateEvent::Send, -2, Event::TapTempo, "", "", (float) _running_frames);
 			_osc->finish_update_event (cu_event);
-			
+
 			_beat_occurred = false;
 		}
 
@@ -1722,7 +1722,7 @@ Engine::mainloop()
 			}
 			_conns_changed = false;
 		}
-		
+
 		// handle learning done from the midi thread
 		if (_learn_done && _midi_bridge) {
 			LockMonitor lm (_midi_bridge->bindings_lock(), __LINE__, __FILE__);
@@ -1730,7 +1730,7 @@ Engine::mainloop()
 
 			_learn_event.bind_str = _learninfo.serialize();
 			_osc->finish_midi_binding_event (_learn_event);
-			
+
 			_learn_done = false;
 		}
 		else if (_received_done) {
@@ -1756,17 +1756,17 @@ Engine::mainloop()
 			}
 
 			_osc->send_auto_updates(timeout_list);
-			
+
 			// emit a parameter changed for state and others
 			for (unsigned int n=0; n < _instances.size(); ++n) {
 				ParamChanged(Event::State, n); // emit
 				ParamChanged(Event::Waiting, n);
 				ParamChanged(Event::LoopPosition, n);
 				ParamChanged(Event::LoopLength, n);
-				ParamChanged(Event::CycleLength, n);				
+				ParamChanged(Event::CycleLength, n);
 				ParamChanged(Event::FreeTime, n);
 			}
-			
+
 			// wake up every 10 ms for servicing auto-update parameters
 			// TODO: make it more even more flexible?
 			const long up_interval = AUTO_UPDATE_STEP * 1000; // 10ms
@@ -1780,7 +1780,7 @@ Engine::mainloop()
 			timeoutv.tv_sec = timeout.tv_sec;
 			timeoutv.tv_usec = timeout.tv_nsec / 1000;
 		}
-		
+
 		// sleep on condition
 		{
 			LockMonitor mon(_event_loop_lock, __LINE__, __FILE__);
@@ -1803,7 +1803,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 	GlobalSetEvent     * gs_event;
 	MidiBindingEvent   * mb_event;
 	SessionEvent       * sess_event;
-	
+
 	CommandMap & cmdmap = CommandMap::instance();
 
 	if ((gp_event = dynamic_cast<GetParamEvent*> (event)) != 0)
@@ -1846,6 +1846,9 @@ Engine::process_nonrt_event (EventNonRT * event)
 		else if (gg_event->param == "selected_loop_num") {
 			gg_event->ret_value = (float) _selected_loop;
 		}
+		else if (gg_event->param == "midi_select_alternate_bindings") {
+			gg_event->ret_value = (float) _midi_bridge->get_current_binding_set();
+		}
 		else if (gg_event->param == "sync_source") {
 			gg_event->ret_value = (float) _sync_source;
 		}
@@ -1855,7 +1858,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 		else if (gg_event->param == "eighth_per_cycle") {
 			gg_event->ret_value = _eighth_cycle;
 		}
-		
+
 		_osc->finish_global_get_event (*gg_event);
 	}
 	else if ((gs_event = dynamic_cast<GlobalSetEvent*> (event)) != 0)
@@ -1896,6 +1899,11 @@ Engine::process_nonrt_event (EventNonRT * event)
 		}
 		else if (gs_event->param == "send_midi_start_on_trigger") {
 			_send_midi_start_on_trigger = gs_event->value > 0.0f;
+		}
+		else if (gs_event->param == "midi_select_alternate_bindings") {
+			if (_midi_bridge) {
+				_midi_bridge->select_alternate_binding_set();
+			}
 		}
 		else if (gs_event->param == "smart_eighths") {
 			_smart_eighths = gs_event->value > 0.0f;
@@ -1955,7 +1963,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 			if (cl_event->secs == 0.0f) {
 				cl_event->secs = _def_loop_secs;
 			}
-			
+
 			add_loop (cl_event->channels, cl_event->secs, cl_event->discrete || _force_discrete);
 		}
 		else if (cl_event->type == ConfigLoopEvent::Remove)
@@ -1971,7 +1979,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 				LoopManageEvent lmev (LoopManageEvent::RemoveLoop, _instances[cl_event->index]);
 				push_loop_manage_to_rt (lmev);
 			}
-			
+
 			_osc->finish_loop_config_event (*cl_event);
 		}
 	}
@@ -1983,7 +1991,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 				bool exclus = (mb_event->options.find("exclusive") != string::npos);
 
 				//initialize value for toggle with current value
-				if (info.style == MidiBindInfo::ToggleStyle) 
+				if (info.style == MidiBindInfo::ToggleStyle)
 					info.last_toggle_val = get_control_value(cmdmap.to_control_t(info.control), info.instance);
 
 				LockMonitor lm (_midi_bridge->bindings_lock(), __LINE__, __FILE__);
@@ -2089,7 +2097,7 @@ Engine::process_nonrt_event (EventNonRT * event)
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -2115,7 +2123,7 @@ void Engine::update_sync_source ()
 		sync_buf = _instances[(int)_sync_source - 1]->get_sync_out_buf();
 		// cerr << "using sync from " << _sync_source -1 << endl;
 	}
-	
+
 	for (Instances::iterator i = _instances.begin(); i != _instances.end(); ++i)
 	{
 		(*i)->use_sync_buf (sync_buf);
@@ -2162,8 +2170,8 @@ Engine::set_tempo (double tempo, bool rt)
 				_instances[n]->set_port(EighthPerCycleLoop, _eighth_cycle);
 			}
 		}
-		calculate_midi_tick(rt);		
-		
+		calculate_midi_tick(rt);
+
 		// is this safe?  hard to say :)
 		do_push_control_event (_nonrt_update_event_queue, Event::type_control_change, Event::EighthPerCycle, _eighth_cycle, -2, 0);
 	}
@@ -2235,7 +2243,7 @@ Engine::set_tempo (double tempo, bool rt)
 		//double nowtime;
 		//gettimeofday(&tval, NULL);
 		//nowtime = tval.tv_sec + tval.tv_usec / 1000000.0;
-		
+
 		_midi_bridge->tempo_clock_update(tempo, _beatstamp, _force_next_clock_start);
 	}
 
@@ -2247,22 +2255,22 @@ void
 Engine::calculate_tempo_frames ()
 {
 	float quantize_value = (float) QUANT_8TH;
-		
+
 	if (!_rt_instances.empty()) {
 		quantize_value = _rt_instances[0]->get_control_value (Event::Quantize);
 	}
-	
+
 	if (_sync_source == InternalTempoSync || _sync_source == JackSync)
 	{
 		if (_tempo > 0.0) {
 			if (quantize_value == QUANT_8TH) {
 				// calculate number of samples per eighth-note (assuming 2 8ths per beat)
-				// samples / 8th = samplerate * (1 / tempo) * 60/2; 
+				// samples / 8th = samplerate * (1 / tempo) * 60/2;
 				_tempo_frames = _driver->get_samplerate() * (1.0/_tempo) * 30.0;
 			}
 			else if (quantize_value == QUANT_CYCLE) {
 				// calculate number of samples per cycle given the current eighths per cycle
-				// samples / 8th = samplerate * (1 / tempo) * 60/2; 
+				// samples / 8th = samplerate * (1 / tempo) * 60/2;
 				// samples / cycle = samples / 8th  *  eighth_per_cycle
 				_tempo_frames = _driver->get_samplerate() * (1.0/_tempo) * 30.0 * _eighth_cycle;
 			}
@@ -2274,7 +2282,7 @@ Engine::calculate_tempo_frames ()
 			_tempo_frames = 0;
 		}
 
-		
+
 		// cerr << "tempo frames is " << _tempo_frames << endl;
 	}
 	else if (_sync_source == MidiClockSync) {
@@ -2304,7 +2312,7 @@ Engine::calculate_midi_tick (bool rt)
 		if (!_instances.empty())
 			quantize_value = _instances[0]->get_control_value (Event::Quantize);
 	}
-	
+
 	if (quantize_value == QUANT_8TH)
 		_midi_loop_tick = 12; // 12 ticks per 8th note
 	else if (quantize_value == QUANT_CYCLE)
@@ -2319,14 +2327,14 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 {
 	nframes_t npos = offset;
 	int hit_at = -1;
-	
+
 	if (_sync_source == InternalTempoSync) {
 
 		if (_tempo_frames == 0.0) {
 			// just calculate quarter note beats for update
 			double qcurr = _quarter_counter;
 			qcurr += (double) nframes;
-			
+
 			if (qcurr >= _quarter_note_frames) {
 				// inaccurate
 				hit_at = (int) npos;
@@ -2344,20 +2352,20 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 		else {
 			double curr = _tempo_counter;
 			double qcurr = _quarter_counter;
-			
+
 			while (npos < nframes) {
-				
+
 				while (curr < _tempo_frames && qcurr < _quarter_note_frames && npos < nframes) {
 					_internal_sync_buf[npos++] = 0.0f;
 					curr += 1.0;
 					qcurr += 1.0;
 				}
-				
+
 				if (qcurr >= _quarter_note_frames) {
 					hit_at = (int) npos;
 					qcurr = ((qcurr - _quarter_note_frames) - truncf(qcurr - _quarter_note_frames)) + 1.0;
 				}
-				
+
 				if (curr >= _tempo_frames) {
 					// cerr << "tempo hit" << endl;
 					_internal_sync_buf[npos++] = 2.0f;
@@ -2365,7 +2373,7 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 					curr = ((curr - _tempo_frames) - truncf(curr - _tempo_frames)) + 1.0;
 				}
 			}
-			
+
 			_tempo_counter = curr;
 			_quarter_counter = qcurr;
 			//cerr << "tempo counter is now: " << _tempo_counter << endl;
@@ -2378,7 +2386,7 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 
 		// get available events
 		_sync_queue->get_read_vector (&vec);
-		
+
 		nframes_t usedframes = 0;
 		nframes_t doframes;
 		size_t num = vec.len[0];
@@ -2387,11 +2395,11 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 		nframes_t fragpos;
 		MIDI::timestamp_t timestamp = 0;
 
-		
+
 		if (num > 0) {
-			
+
 			while (n < num)
-			{ 
+			{
 				evt = vec.buf[vecn] + n;
 				fragpos = (nframes_t) (evt->FragmentPos() % nframes);
 				timestamp = evt->getTimestamp();
@@ -2403,7 +2411,7 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 					n = 0;
 					num = vec.len[1];
 				}
-				
+
 				if (fragpos < usedframes || fragpos >= nframes) {
 					// bad fragment pos
 #ifdef DEBUG
@@ -2411,9 +2419,9 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 #endif
 					//	continue;
 				}
-				
+
 				doframes = fragpos - usedframes;
-				
+
 				// handle special global RT events
 				if (evt->Control == Event::MidiTick) {
 					_midi_ticks++;
@@ -2469,7 +2477,7 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 					_quarter_counter = - ((double)usedframes);
 					_prev_beatstamp = timestamp;
 				}
-				
+
 				if ((_midi_ticks % _midi_loop_tick) == 0) {
 					//cerr << "GOT SYNC TICK at " << fragpos << endl;
 
@@ -2480,19 +2488,19 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 					_internal_sync_buf[fragpos] = 2.0f;
 
 					doframes += 1;
-					
+
 					//_midi_ticks = 0;
 				}
-				
+
 				usedframes += doframes;
 			}
-			
+
 			// advance events
 			_sync_queue->increment_read_ptr (vec.len[0] + vec.len[1]);
 
 			// zero the rest
 			memset (&(_internal_sync_buf[usedframes]), 0, (nframes - usedframes) * sizeof(float));
-			
+
 			_quarter_counter += (double) nframes;
 		}
 		else {
@@ -2509,16 +2517,16 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 		//memset (_internal_sync_buf, 0, nframes * sizeof(float));
 
 	}
-	else if (_sync_source == JackSync) 
+	else if (_sync_source == JackSync)
 	{
 		for (nframes_t n=offset; n < nframes; ++n) {
 			_internal_sync_buf[n]  = 0.0;
 		}
-				
+
 		TransportInfo info;
 		if (_driver->get_transport_info(info)) {
 
-			
+
 			if (TEMPO_DIFF(_tempo,info.bpm)) {
 				set_tempo(info.bpm, true);
 				calculate_tempo_frames ();
@@ -2532,15 +2540,15 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 				nframes_t nextval = (nframes_t) lrint (fmod ((double) (info.framepos + offset + nframes), _tempo_frames));
 				nframes_t diff = lrint(_tempo_frames - thisval);
 				diff = (thisval == 0) ? 0 : diff;
-				
+
 				//fprintf(stderr, "pos: %lu   lastpos: %lu  tempoframe: %g  thisval: %lu  nextval: %lu\n", info.framepos , info.last_framepos, _tempo_frames, thisval, nextval);
-				
+
 				if (info.framepos < info.last_framepos) {
 					//fprintf(stderr,"framepos discontinuity!  setting samples since sync to : %lu   last: %lu \n",info.framepos + offset, info.last_framepos);
 					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i) {
 						(*i)->set_samples_since_sync(info.framepos + offset);
 					}
- 
+
 				}
 
 				if ((thisval == 0 || nextval <= thisval) && diff < nframes) {
@@ -2556,7 +2564,7 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 				diff = (thisval == 0) ? 0 : diff;
 
 				//cerr << "pos: " << info.framepos << "  qframes: " << _quarter_note_frames << "  this: " << thisval << "  next: " << nextval << endl;
-				
+
 				if ((thisval == 0 || nextval <= thisval) && diff < nframes) {
 				//	cerr << "got quarter frame in this cycle: diff: " << diff << endl;
 					hit_at = (int) diff;
@@ -2577,14 +2585,14 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 			if (cycleframes > 0) {
 				ntempo = (_driver->get_samplerate() * 30.0 * _eighth_cycle / cycleframes);
 			}
-			
+
 			if (TEMPO_DIFF(ntempo, _tempo)) {
 				//cerr << "new tempo is: " << ntempo << "  oldtempo: " << _tempo << endl;
 
                                 if (_midi_bridge) {
                                         _beatstamp = _midi_bridge->get_current_host_time();
                                 }
-                                
+
 				_force_next_clock_start = true;
 
 				set_tempo(ntempo, true);
@@ -2593,14 +2601,14 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 				// wake up mainloop safely
 				pthread_cond_signal (&_event_cond);
 			}
-			
+
 			// just calculate quarter note beats for update
 			if (_quarter_note_frames > 0.0) {
 				nframes_t currpos  = (nframes_t) (_rt_instances[_sync_source-1]->get_control_value(Event::LoopPosition) * _driver->get_samplerate());
 				nframes_t loopframes = (nframes_t) (_rt_instances[_sync_source-1]->get_control_value(Event::LoopLength) * _driver->get_samplerate());
 				if (loopframes > 0) {
 					nframes_t testval = (((currpos + nframes) % loopframes) % (nframes_t)_quarter_note_frames);
-					
+
 					if (testval <= nframes || testval == 0) {
 						// inaccurate
 						//cerr << "quarter hit" << endl;
@@ -2624,9 +2632,9 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 		size_t vecn = 0;
 		nframes_t fragpos;
 		MIDI::timestamp_t timestamp = 0;
-		
+
 		while (n < num)
-		{ 
+		{
 			evt = vec.buf[vecn] + n;
 			fragpos = (nframes_t) (evt->FragmentPos() % nframes);
 			timestamp = evt->getTimestamp();
@@ -2659,17 +2667,17 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 					evt->Command = Event::PAUSE_ON;
 					for (Instances::iterator i = _rt_instances.begin(); i != _rt_instances.end(); ++i) {
 						float prevquant = (*i)->get_control_value(Event::Quantize);
-						tmpevt.Value = QUANT_OFF;						
+						tmpevt.Value = QUANT_OFF;
 						(*i)->do_event(&tmpevt); // force off quantize for this pause action
 						(*i)->do_event(evt);
 						(*i)->run (0, 0);
 						// now turn quantize back to previous value
-						tmpevt.Value = prevquant;						
+						tmpevt.Value = prevquant;
 						(*i)->do_event(&tmpevt);
 					}
 				}
 			}
-			
+
 			++n;
 			// to avoid code copying
 			if (n == num && vecn == 0) {
@@ -2682,30 +2690,30 @@ Engine::generate_sync (nframes_t offset, nframes_t nframes)
 		// advance events
 		_sync_queue->increment_read_ptr (vec.len[0] + vec.len[1]);
 	}
-		
+
 	if (hit_at >= 0 && _tempo < 240.0) {
 		_beat_occurred = true;
-		
+
 		// this is close enough for now, really it should be a bit into the future since this is yet to be output
                 if (_midi_bridge) {
                         _beatstamp = _midi_bridge->get_current_host_time();
                 }
 		//fprintf(stderr, "beat occurred: at %.13g\n", _beatstamp);
-		
+
 		if (_send_midi_start_after_next_hit && _midi_bridge) {
 			// force a send now
 			//cerr << "force a send now" << endl;
 			_midi_bridge->tempo_clock_update(_tempo, _beatstamp, true);
 			_send_midi_start_after_next_hit = false;
 		}
-		
+
 
 		// wake up mainloop safely
 		//TentativeLockMonitor mon(_event_loop_lock,  __LINE__, __FILE__);
 		//if (mon.locked()) {
 		pthread_cond_signal (&_event_cond);
 	}
-	
+
 	return hit_at;
 }
 
@@ -2743,15 +2751,15 @@ Engine::load_session (std::string fname, string * readstr)
 	else {
 		sessiondoc.read(fname);
 	}
-	
+
 	if (!sessiondoc.initialized()) {
-		fprintf (stderr, "Error loading session at %s!\n", fname.c_str()); 
+		fprintf (stderr, "Error loading session at %s!\n", fname.c_str());
 		return false;
 	}
 
 	XMLNode * root_node = sessiondoc.root();
 	if (!root_node || root_node->name() != "SLSession") {
-		fprintf (stderr, "Preset root node not found in %s!\n", fname.c_str()); 
+		fprintf (stderr, "Preset root node not found in %s!\n", fname.c_str());
 		return false;
 	}
 
@@ -2809,6 +2817,12 @@ Engine::load_session (std::string fname, string * readstr)
 			sscanf (prop->value().c_str(), "%d", &temp);
 			_send_midi_start_on_trigger = temp ? true: false;
 		}
+		if ((prop = globals_node->property ("midi_select_alernate_bindings")) != 0) {
+			int temp = 0;
+			sscanf (prop->value().c_str(), "%d", &temp);
+			if (_midi_bridge)
+			_midi_bridge->select_binding_set(temp);
+		}
 		if ((prop = globals_node->property ("smart_eighths")) != 0) {
 			int temp = 0;
 			sscanf (prop->value().c_str(), "%d", &temp);
@@ -2819,8 +2833,8 @@ Engine::load_session (std::string fname, string * readstr)
 		}
 
 	}
-	
-	
+
+
 	// just remove everything for now
 	while (_instances.size() > 0) {
 		LoopManageEvent lmev (LoopManageEvent::RemoveLoop, _instances.back());
@@ -2834,11 +2848,11 @@ Engine::load_session (std::string fname, string * readstr)
 	if (!loopers_node) {
 		return false;
 	}
-	
+
 	looper_kids = loopers_node->children ("Looper");
 
 	_loading = true;
-	
+
 	for (XMLNodeConstIterator niter = looper_kids.begin(); niter != looper_kids.end(); ++niter)
 	{
 		XMLNode *child;
@@ -2854,9 +2868,9 @@ Engine::load_session (std::string fname, string * readstr)
 	_loading = false;
 
 	_driver->set_timebase_master(_jack_timebase_master);
-	
+
 	_osc->send_all_config();
-	
+
 	return true;
 }
 
@@ -2868,13 +2882,13 @@ Engine::save_session (std::string fname, bool write_audio, string * writestr)
 	XMLTree sessiondoc;
 	char buf[120];
 
-	
+
 	XMLNode * root_node = new XMLNode("SLSession");
 	root_node->add_property("version", sooperlooper_version);
 	sessiondoc.set_root (root_node);
 
 	XMLNode * globals_node = root_node->add_child ("Globals");
-	
+
 	snprintf(buf, sizeof(buf), "%.10g", _tempo);
 	globals_node->add_property ("tempo", buf);
 
@@ -2883,13 +2897,13 @@ Engine::save_session (std::string fname, bool write_audio, string * writestr)
 
 	snprintf(buf, sizeof(buf), "%.10g", _curr_common_dry);
 	globals_node->add_property ("common_dry", buf);
-	
+
 	snprintf(buf, sizeof(buf), "%.10g", _curr_common_wet);
 	globals_node->add_property ("common_wet", buf);
 
 	snprintf(buf, sizeof(buf), "%.10g", _curr_input_gain);
 	globals_node->add_property ("input_gain", buf);
-	
+
 	snprintf(buf, sizeof(buf), "%d", (int)_sync_source);
 	globals_node->add_property ("sync_source", buf);
 
@@ -2905,14 +2919,14 @@ Engine::save_session (std::string fname, bool write_audio, string * writestr)
 	snprintf(buf, sizeof(buf), "%d", (int)_use_sync_start ? 1 : 0);
 	globals_node->add_property ("use_midi_start", buf);
 	snprintf(buf, sizeof(buf), "%d", (int)_use_sync_stop ? 1 : 0);
-	globals_node->add_property ("use_midi_stop", buf);	
+	globals_node->add_property ("use_midi_stop", buf);
 	snprintf(buf, sizeof(buf), "%d", (int)_send_midi_start_on_trigger ? 1 : 0);
 	globals_node->add_property ("send_midi_start_on_trigger", buf);
 
 	snprintf(buf, sizeof(buf), "%d", (int)_smart_eighths ? 1 : 0);
 	globals_node->add_property ("smart_eighths", buf);
 
-	
+
 	XMLNode * loopers_node = root_node->add_child ("Loopers");
 
 	int n=0;
@@ -2937,11 +2951,11 @@ Engine::save_session (std::string fname, bool write_audio, string * writestr)
 	if (writestr) {
 		*writestr = sessiondoc.write_buffer();
 	}
-	
+
 	// write doc to file
 	if (!fname.empty()) {
 		if (sessiondoc.write (fname))
-		{	    
+		{
 			fprintf (stderr, "Stored session as %s\n", fname.c_str());
 			return true;
 		}

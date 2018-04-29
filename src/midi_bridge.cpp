@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 
@@ -43,7 +43,7 @@ using namespace MIDI;
 using namespace PBD;
 
 
-static inline double 
+static inline double
 gain_to_uniform_position (double g)
 {
 	if (g == 0) return 0;
@@ -55,7 +55,7 @@ gain_to_uniform_position (double g)
 
 }
 
-static inline double 
+static inline double
 uniform_position_to_gain (double pos)
 {
 	if (pos == 0) {
@@ -73,7 +73,7 @@ uniform_position_to_gain (double pos)
 MidiBridge::MidiBridge (string name, string oscurl, PortRequest & req)
 	: _name (name), _oscurl(oscurl)
 {
-	// talk directly to the engine via signals AND send osc 
+	// talk directly to the engine via signals AND send osc
 
 	_port = 0;
 	_done = false;
@@ -95,7 +95,7 @@ MidiBridge::MidiBridge (string name, string oscurl, PortRequest & req)
 
 
 	PortFactory factory;
-	
+
 	if ((_port = factory.create_port (req)) == 0) {
 		return;
 	}
@@ -113,7 +113,7 @@ MidiBridge::MidiBridge (string name,  PortRequest & req)
 	: _name (name)
 {
 	// use only midi interface and talk directly to the engine via signals
-	
+
 	_port = 0;
 	_done = false;
 	_learning = false;
@@ -127,7 +127,7 @@ MidiBridge::MidiBridge (string name,  PortRequest & req)
 	_feedback_out = false;
 
 	PortFactory factory;
-	
+
 	if ((_port = factory.create_port (req)) == 0) {
 		cerr << "failed to create port" << endl;
 		return;
@@ -139,7 +139,7 @@ MidiBridge::MidiBridge (string name,  PortRequest & req)
 	init_thread();
 	init_clock_thread();
 	_ok = true;
-	
+
 }
 
 MidiBridge::MidiBridge (string name)
@@ -147,7 +147,7 @@ MidiBridge::MidiBridge (string name)
 {
 	// only talk to engine via signals, midi will be injected
 	// by someone else
-	
+
 	_port = 0;
 	_done = false;
 	_clockdone = false;
@@ -156,7 +156,7 @@ MidiBridge::MidiBridge (string name)
 	_addr = 0;
 	_midi_thread = 0;
 	_clock_thread = 0;
-	_ok = true;	
+	_ok = true;
 	_output_clock = false;
 	_getnext = false;
 	_feedback_out = false;
@@ -203,15 +203,15 @@ MidiBridge::init_thread()
 		cerr << "UI: cannot set O_NONBLOCK on signal write pipe " << strerror (errno) << endl;
 		return false;
 	}
-	
+
 	pthread_create (&_midi_thread, NULL, &MidiBridge::_midi_receiver, this);
 	if (!_midi_thread) {
 		return false;
 	}
-	
+
 	//pthread_detach(_midi_thread);
 	//_port->input()->trace(true, &cerr);
-	
+
 	return true;
 }
 
@@ -278,7 +278,7 @@ void MidiBridge::terminate_clock_thread()
 
 	if (_clock_thread) {
 		_clockdone = true;
-		
+
 		poke_clock_thread ();
 		pthread_join (_clock_thread, &status);
 	}
@@ -321,7 +321,7 @@ MidiBridge::finish_learn(MIDI::byte chcmd, MIDI::byte param, MIDI::byte val)
 		return;
 	}
 
-	
+
 	if (_learning) {
 
 		if (_midi_bindings.get_channel_and_type (chcmd, chan, type)) {
@@ -329,6 +329,7 @@ MidiBridge::finish_learn(MIDI::byte chcmd, MIDI::byte param, MIDI::byte val)
 			_learninfo.channel = chan;
 			_learninfo.type = type;
 			_learninfo.param = param;
+			_learninfo.set = _midi_bindings.current_set();
 
 			// if type is n, then lets force the command to be note as well
 			if (CommandMap::instance().is_command(_learninfo.control)) {
@@ -339,7 +340,7 @@ MidiBridge::finish_learn(MIDI::byte chcmd, MIDI::byte param, MIDI::byte val)
 					_learninfo.command = "note";
 				}
 			}
-			
+
 			//_bindings.add_binding(_learninfo);
 			// notify of new learn
 			//cerr << "learned new one: " << _learninfo.serialize() << endl;
@@ -359,6 +360,7 @@ MidiBridge::finish_learn(MIDI::byte chcmd, MIDI::byte param, MIDI::byte val)
 			info.channel = chan;
 			info.type = type;
 			info.param = param;
+			info.set = _midi_bindings.current_set();
 
 			// notify of new learn
 			//cerr << "recvd new one: " << info.serialize() << endl;
@@ -406,9 +408,9 @@ MidiBridge::incoming_midi (Parser &p, byte *msg, size_t len, timestamp_t timesta
  		b1 = MIDI::on | (b1 & 0x0F);
 		b3 = 0;
 	}
-	
+
 	// fprintf(stderr, "incmoing: %02x  %02x  %02x\n", (int) b1,(int) b2, (int) b3);
-	
+
 	if (_learning || _getnext) {
 		finish_learn(b1, b2, b3);
 	}
@@ -426,8 +428,8 @@ MidiBridge::inject_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, lon
  		chcmd = MIDI::on | (chcmd & 0x0F);
 	        val = 0;
 	}
-	
-	
+
+
 	if (_learning || _getnext) {
 		finish_learn(chcmd, param, val);
 	}
@@ -447,11 +449,11 @@ MidiBridge::queue_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long
 	}
 
 	// convert midi to lookup key
-	// lookup key = (chcmd << 8) | param
+	// lookup key = (chcmd << 12) | (param << 4) | set
 
-	int key = (chcmd << 8) | param;
+	int key = (chcmd << 12) | param << 4 | _midi_bindings.current_set();
 
-	switch(chcmd & 0xF0) 
+	switch(chcmd & 0xF0)
 	{
 	case MIDI::chanpress:
 		val = param;
@@ -474,8 +476,8 @@ MidiBridge::queue_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long
 			float val_ratio;
 			int clamped_val;
 
-			if ((((info.type == "off") || (info.type == "ccon")) && val > 0) || (((info.type == "on") || (info.type == "ccoff")) && val == 0)) {
-				// binding was for note off or on only, skip this
+			if (_midi_bindings.current_set() != info.set || (((info.type == "off") || (info.type == "ccon")) && val == 0) || (((info.type == "on") || (info.type == "ccoff")) && val > 0)) {
+				// binding was for another set, or for note off or on only, skip this
 				continue;
 			}
 
@@ -511,15 +513,15 @@ MidiBridge::queue_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long
 				// toggle style is a bit of a hack, but here we go
 				if (info.last_toggle_val != info.ubound) {
 					scaled_val = info.ubound;
-				} 
+				}
 				else {
 					scaled_val = info.lbound;
 				}
 				info.last_toggle_val = scaled_val;
 			}
 
-			//fprintf(stderr, "found binding: key: %x  val: %02x  scaled: %g  type: %s\n", (int) key, (int) val, scaled_val, info.type.c_str());
-			//cerr << "ctrl: " << info.control << "  cmd: " << info.command << endl;
+			fprintf(stderr, "found binding: key: %x  val: %02x  scaled: %g  type: %s, \n", (int) key, (int) val, scaled_val, info.type.c_str());
+			cerr << "ctrl: " << info.control << "  cmd: " << info.command << " set: " << info.set << endl;
 
 			send_event (info, scaled_val, framepos);
 		}
@@ -545,7 +547,7 @@ MidiBridge::queue_midi (MIDI::byte chcmd, MIDI::byte param, MIDI::byte val, long
 		MidiSyncEvent (Event::MidiTick, framepos, timestamp); // emit
 	}
 	else {
-		// fprintf(stderr, "binding %x not found\n", key);
+	  fprintf(stderr, "binding %x not found\n", key);
 	}
 }
 
@@ -557,20 +559,20 @@ MidiBridge::send_event (const MidiBindInfo & info, float val, long framepos)
 
 	string cmd = info.command;
 	CommandMap & cmdmap = CommandMap::instance();
-	
+
 	Event::type_t optype = cmdmap.to_type_t (cmd);
 	Event::control_t ctrltype = cmdmap.to_control_t (info.control);
 	Event::command_t cmdtype = cmdmap.to_command_t (info.control);
-	
+
 	if (cmd == "set") {
 		if (_use_osc) {
 			snprintf (tmpbuf, sizeof(tmpbuf)-1, "/sl/%d/%s", info.instance, cmd.c_str());
-			
+
 			if (lo_send(_addr, tmpbuf, "sf", info.control.c_str(), val) < 0) {
 				fprintf(stderr, "OSC error %d: %s\n", lo_address_errno(_addr), lo_address_errstr(_addr));
 			}
 		}
-		
+
 		MidiControlEvent (optype, ctrltype, val, (int8_t) info.instance, framepos); // emit
 	}
 	else {
@@ -598,12 +600,12 @@ MidiBridge::send_event (const MidiBindInfo & info, float val, long framepos)
 
 		if (_use_osc) {
 			snprintf (tmpbuf, sizeof(tmpbuf)-1, "/sl/%d/%s", info.instance, cmd.c_str());
-			
+
 			if (lo_send(_addr, tmpbuf, "s", info.control.c_str()) < 0) {
 				fprintf(stderr, "OSC error %d: %s\n", lo_address_errno(_addr), lo_address_errstr(_addr));
 			}
 		}
-		
+
 		MidiCommandEvent (optype, cmdtype, (int8_t) info.instance, framepos); // emit
 	}
 }
@@ -637,7 +639,7 @@ void  MidiBridge::midi_receiver()
 			pfd[nfds].events = POLLIN|POLLHUP|POLLERR;
 			nfds++;
 		}
-		
+
 	again:
 		// cerr << "poll on " << nfds << " for " << timeout << endl;
 		if (poll (pfd, nfds, timeout) < 0) {
@@ -645,21 +647,21 @@ void  MidiBridge::midi_receiver()
 				/* gdb at work, perhaps */
 				goto again;
 			}
-			
+
 			cerr << "MIDI thread poll failed: " <<  strerror (errno) << endl;
-			
+
 			break;
 		}
 
 		if (_done) {
 			break;
 		}
-		
+
 		if ((pfd[0].revents & ~POLLIN)) {
 			cerr << "Transport: error polling extra MIDI port" << endl;
 			break;
 		}
-		
+
 		if (nfds > 1 && pfd[1].revents & POLLIN) {
 
 			/* reading from the MIDI port activates the Parser
@@ -667,15 +669,15 @@ void  MidiBridge::midi_receiver()
 			   about. the port is already set to NONBLOCK so that
 			   can read freely here.
 			*/
-			
+
 			while (1) {
-				
+
 				// cerr << "+++ READ ON " << port->name() << endl;
-				
+
 				int nread = _port->read (buf, sizeof (buf));
-				
+
 				// cerr << "-- READ (" << nread << " ON " << port->name() << endl;
-				
+
 				if (nread > 0) {
 					if ((size_t) nread < sizeof (buf)) {
 						break;
@@ -692,7 +694,7 @@ void  MidiBridge::midi_receiver()
 					break;
 				}
 			}
-			
+
 		}
 	}
 }
@@ -722,7 +724,7 @@ void * MidiBridge::clock_thread_entry()
 	if (!_port) return 0;
 
 	//cerr << "entering clock thread" << endl;
-	
+
 	while (!_clockdone) {
 		nfds = 0;
 
@@ -733,7 +735,7 @@ void * MidiBridge::clock_thread_entry()
 			nfds++;
 		}
 		*/
-		
+
 
 	again:
 		FD_SET(_clock_request_pipe[0], &pfd);
@@ -747,19 +749,19 @@ void * MidiBridge::clock_thread_entry()
 				/* gdb at work, perhaps */
 				goto again;
 			}
-			
+
 			cerr << "MIDI thread select failed: " <<  strerror (errno) << endl;
-			
+
 			break;
 		}
 
 		if (_clockdone) {
 			break;
 		}
-		
+
 		// time to write out a clock message, the timer expired
 		nowtime = _port->get_current_host_time();
-		
+
 		if (ret == 1) {
 			::read(_clock_request_pipe[0], &buf, 1);
 			//cerr << "poke event read" << endl;
@@ -774,17 +776,17 @@ void * MidiBridge::clock_thread_entry()
 			// write out clocks until the next limit in the future
 
 			double nextlimit = nowtime + 2*steady_timeout;
-			
-			while (nextstamp <= nextlimit) 
+
+			while (nextstamp <= nextlimit)
 			{
 				_port->write_at(&clockmsg, 1, nextstamp);
 
-				//cerr << "CLOCK output at" << nextstamp << endl;			
-				nextstamp += ticktime; 
+				//cerr << "CLOCK output at" << nextstamp << endl;
+				nextstamp += ticktime;
 				++ticks;
 			}
 
-			
+
 		}
 		else {
 			//cerr << "ret was : " << ret << " timeoutp: " << timeoutp << endl;
@@ -799,20 +801,20 @@ void * MidiBridge::clock_thread_entry()
 		}
 
 		// recalculate timeout
-		if (_tempo_updated) 
+		if (_tempo_updated)
 		{
 			// Example: At a tempo of 120 BPM, there are 120 quarter notes per minute.
 			// There are 24 MIDI clocks in each quarter note.
-			// Therefore, there should be 24 * 120 MIDI Clocks per minute. 
+			// Therefore, there should be 24 * 120 MIDI Clocks per minute.
 			// So, each MIDI Clock is sent at a rate of 60/(24 * 120) seconds)
 			// timeout interval = 60/(24 * bpm);
 
 			if (_tempo > 0.0) {
 				ticktime = (60.0/(24 * _tempo));
 
-				// first timeout will sync us up to the correct beat timestamp, 
+				// first timeout will sync us up to the correct beat timestamp,
 				// then the steady state one will be used
-				
+
 				// wait just enough to get us to the next multiple of the beat stamp
 				nextstamp = _beatstamp;
 				ticks = 0;
@@ -853,7 +855,7 @@ void MidiBridge::tempo_clock_update(double tempo, MIDI::timestamp_t timestamp, b
 	while (tempo > 240.0) {
 		tempo *= 0.5;
 	}
-	
+
 	if (forcestart || (_tempo == 0.0 && tempo > 0.0)) {
 		_pending_start = true;
 	}
@@ -871,9 +873,29 @@ MIDI::timestamp_t MidiBridge::get_current_host_time()
 	else return 0;
 }
 
+void MidiBridge::select_alternate_binding_set()
+{
+	_midi_bindings.select_alternate_set();
+}
+
+int MidiBridge::get_current_binding_set() const
+{
+	_midi_bindings.current_set();
+}
+
+void MidiBridge::select_binding_set(int set)
+{
+	_midi_bindings.select_set(set);
+}
 
 void MidiBridge::parameter_changed(int ctrl_id, int instance, Engine *engine)
 {
+	if (ctrl_id == SooperLooper::Event::MidiSelectAlternateBindings) {
+		cerr << "changing binding set" << endl;
+		select_alternate_binding_set();
+		return;
+	}
+
 	if (!_feedback_out) return;
 
 	int selected_loop = (int) engine->get_control_value(Event::SelectedLoopNum, -2);
@@ -885,7 +907,7 @@ void MidiBridge::parameter_changed(int ctrl_id, int instance, Engine *engine)
 	}
 	else {
 		float value = engine->get_control_value((Event::control_t)ctrl_id, instance);
-	
+
 		if (instance == -1) {
 			// all loops
 		}

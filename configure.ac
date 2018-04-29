@@ -222,6 +222,7 @@ then
     dnl sigc++
     PKG_CHECK_MODULES(SIGCPP, sigc++-2.0 >= 2.2.10)
 
+    echo SIGCPP_CFLAGS is ${SIGCPP_CFLAGS}
     AC_SUBST(SIGCPP_LIBS)
     AC_SUBST(SIGCPP_CFLAGS)
 

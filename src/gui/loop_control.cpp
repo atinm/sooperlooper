@@ -1,20 +1,20 @@
 /*
 ** Copyright (C) 2004 Jesse Chappell <jesse@essej.net>
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**  
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**  
+**
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-**  
+**
 */
 
 #include <cstdio>
@@ -78,7 +78,7 @@ XMLNode& LoopControl::SpawnConfig::get_state () const
 
 	node->add_property ("force_spawn", force_spawn ? "yes": "no");
 	node->add_property ("never_timeout", never_timeout ? "yes": "no");
-	
+
 	return *node;
 }
 
@@ -89,13 +89,13 @@ int LoopControl::SpawnConfig::set_state (const XMLNode& node)
 	XMLNode *child_node;
 
 	wxString tmpstr;
-	
+
 	for (niter = nlist.begin(); niter != nlist.end(); ++niter) {
 		child_node = *niter;
 
 		if (child_node->name() == "context") {
 			XMLProperty *prop;
-			
+
 			if ((prop = child_node->property ("name")) != 0) {
 				name =  wxString::FromAscii(prop->value().c_str());
 			}
@@ -176,19 +176,19 @@ LoopControl::LoopControl (const wxString & rcdir)
 	_engine_id = 0;
 
 	setup_param_map();
-	
+
 	_osc_server = lo_server_new(NULL, NULL);
 	if (!_osc_server) return;
-	
+
 	char * tmpstr;
 	tmpstr = lo_server_get_url (_osc_server);
 	_our_url = tmpstr;
 	free (tmpstr);
-	
+
 	_our_port = lo_server_get_port(_osc_server);
 
 	cerr << "slgui: our URL is " << _our_url << endl;
-	
+
 	/* add handler for control param callbacks, first is loop index , 2nd arg ctrl string, 3nd arg value */
 	lo_server_add_method(_osc_server, "/ctrl", "isf", LoopControl::_control_handler, this);
 
@@ -200,10 +200,10 @@ LoopControl::LoopControl (const wxString & rcdir)
 	lo_server_add_method(_osc_server, "/alive_resp", "ssii", LoopControl::_alive_handler, this);
 
 	lo_server_add_method(_osc_server, "/error", "ss", LoopControl::_error_handler, this);
-	
+
 	/* add handler for recving midi bindings, s:status s:serialized binding */
 	lo_server_add_method(_osc_server, "/recv_midi_bindings", "ss", LoopControl::_midi_binding_handler, this);
-	
+
 	_pingack = false;
 	_waiting = 0;
 	_failed = false;
@@ -224,7 +224,7 @@ LoopControl::~LoopControl()
 	if (_osc_server) {
 		lo_server_free (_osc_server);
 	}
-	
+
 	delete _updatetimer;
 	delete _midi_bindings;
 }
@@ -235,7 +235,7 @@ LoopControl::init_traffic_thread()
 	// thread for watching for new osc traffic
 
 	_traffic_done = false;
-	
+
 	if (pipe (_traffic_request_pipe)) {
 		cerr << "Cannot create midi request signal pipe" <<  strerror (errno) << endl;
 		return false;
@@ -250,7 +250,7 @@ LoopControl::init_traffic_thread()
 		cerr << "UI: cannot set O_NONBLOCK on signal write pipe " << strerror (errno) << endl;
 		return false;
 	}
-	
+
 	pthread_create (&_osc_traffic_thread, NULL, &LoopControl::_osc_traffic, this);
 	if (!_osc_traffic_thread) {
 		return false;
@@ -327,7 +327,7 @@ LoopControl::connect()
 
 	_registeredauto_loop_map.clear();
 	_registeredin_loop_map.clear();
-	
+
 	if (!_spawn_config.force_spawn) {
 		// send off a ping.  set a timer, if we don't have a response, we'll start our own locally
 		_waiting = 0;
@@ -344,7 +344,7 @@ LoopControl::connect()
 	else {
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -354,7 +354,7 @@ LoopControl::register_global_updates(bool unreg)
 	char buf[50];
 
 	if (!_osc_addr) return;
-	
+
 	if (unreg) {
 		snprintf(buf, sizeof(buf), "/unregister_update");
 
@@ -377,7 +377,8 @@ LoopControl::register_global_updates(bool unreg)
 	lo_send(_osc_addr, buf, "sss", "send_midi_start_on_trigger", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "smart_eighths", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "selected_loop_num", _our_url.c_str(), "/ctrl");
-	
+	lo_send(_osc_addr, buf, "sss", "select_midi_alternate_binding_set", _our_url.c_str(), "/ctrl");
+
 	if (unreg) {
 		lo_send(_osc_addr, "/unregister_auto_update", "siss", "in_peak_meter", 100, _our_url.c_str(), "/ctrl");
 		lo_send(_osc_addr, "/unregister_auto_update", "siss", "out_peak_meter", 100, _our_url.c_str(), "/ctrl");
@@ -394,19 +395,19 @@ LoopControl::disconnect (bool killit)
 
 	if (_osc_addr) {
 		register_global_updates(true); // unregister
-		
+
 		if (killit) {
 			send_quit();
 		}
-		
+
 		lo_address_free (_osc_addr);
 		_osc_addr = 0;
 	}
 	_osc_url = "";
 	_we_spawned = false;
-	
+
 	Disconnected(); // emit
-	
+
 	return true;
 }
 
@@ -426,7 +427,7 @@ LoopControl::osc_traffic()
 	// to send updates when new data comes in on the osc port
 	int oscfd = lo_server_get_socket_fd(_osc_server);
 	struct pollfd pfd[2];
-	int timeout = -1; 
+	int timeout = -1;
 	int nfds = 2;
 	struct timespec nsleep = { 0, 20000000 };
 
@@ -436,7 +437,7 @@ LoopControl::osc_traffic()
 	pfd[0].events = POLLIN|POLLHUP|POLLERR;
 	pfd[1].fd = oscfd;
 	pfd[1].events = POLLIN|POLLHUP|POLLERR;
-	
+
 	while (!_traffic_done)
 	{
 		pfd[0].fd = _traffic_request_pipe[0];
@@ -445,15 +446,15 @@ LoopControl::osc_traffic()
 		pfd[1].events = POLLIN|POLLHUP|POLLPRI|POLLERR;
 
 		pthread_testcancel();
-		
+
 		if (poll (pfd, nfds, timeout) < 0) {
 			if (errno == EINTR) {
 				/* gdb at work, perhaps */
 				// goto again;
 			}
-			
+
 			cerr << "OSC thread poll failed: " <<  strerror (errno) << endl;
-			
+
 			continue;
 		}
 
@@ -461,9 +462,9 @@ LoopControl::osc_traffic()
 			break;
 		}
 
-		if (nfds > 1 && (pfd[1].revents & POLLIN)) 
+		if (nfds > 1 && (pfd[1].revents & POLLIN))
 		{
-			
+
 			// emit signal
 			// cerr << "got new data" << endl;
 			NewDataReady(); // emit
@@ -484,7 +485,7 @@ LoopControl::is_engine_local()
 	char * lochost = lo_url_get_hostname(_our_url.c_str());
 
 	// cerr << "osc: " << _osc_url << "  remhost: " << remhost << "  lochost: " << lochost << endl;
-	
+
 	if (_host == wxT("0.0.0.0") || // special case ridiculous mac-ness
 	    (remhost && lochost && (strncmp(remhost, lochost, 30) == 0))) {
 		ret = true;
@@ -503,7 +504,7 @@ LoopControl::is_engine_local()
 
 void
 LoopControl::pingtimer_expired()
-{ 
+{
 	update_values();
 
 	// check state of pingack
@@ -534,8 +535,8 @@ LoopControl::pingtimer_expired()
 				_our_url = tmpbuf;
 
 				//cerr << "last chance effort: with oururl " << _our_url << endl;
-				
-				// send off a ping.  
+
+				// send off a ping.
 				_pingack = false;
 				_waiting = 60;
 				lo_send(_osc_addr, "/ping", "ssi", _our_url.c_str(), "/pingack", 1);
@@ -570,7 +571,7 @@ LoopControl::pingtimer_expired()
 				ConnectFailed("Execution of SooperLooper engine process failed."); // emit
 			}
 		}
-			
+
 	}
 }
 
@@ -579,7 +580,7 @@ bool LoopControl::spawn_looper()
 	// use wxExecute
 	char tmpbuf[300];
 	string cmdstr = _spawn_config.exec_name;
-	
+
 	if (cmdstr.empty()) {
 		cmdstr = "sooperlooper"; // always force something
 	}
@@ -591,11 +592,11 @@ bool LoopControl::spawn_looper()
 		 _spawn_config.num_channels,
 		 (int) _spawn_config.mem_secs
 		);
-	
+
 	cmdstr += tmpbuf;
-	
+
 	if (!_spawn_config.midi_bind_path.empty()) {
-		snprintf(tmpbuf, sizeof(tmpbuf), " -m \"%s\"", _spawn_config.midi_bind_path.c_str());	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -m \"%s\"", _spawn_config.midi_bind_path.c_str());
 		cmdstr += tmpbuf;
 	}
 	else {
@@ -604,32 +605,32 @@ bool LoopControl::spawn_looper()
 		//cmdstr += wxString::Format(wxT(" -m \"%s\""), defpath.c_str());
 
 		string defpath = string(_rcdir.fn_str()) + "/" + "default_midi.slb";
-		snprintf(tmpbuf, sizeof(tmpbuf), " -m \"%s\"", defpath.c_str());	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -m \"%s\"", defpath.c_str());
 		cmdstr += tmpbuf;
 	}
-	
+
 	if (!_spawn_config.jack_name.empty()) {
 		//cmdstr += wxString::Format(wxT(" -j \"%s\""), _spawn_config.jack_name.c_str());
-		snprintf(tmpbuf, sizeof(tmpbuf), " -j \"%s\"", _spawn_config.jack_name.c_str());	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -j \"%s\"", _spawn_config.jack_name.c_str());
 		cmdstr += tmpbuf;
 	}
 
 	if (!_spawn_config.jack_serv_name.empty()) {
 		//cmdstr += wxString::Format(wxT(" -S \"%s\""), _spawn_config.jack_serv_name.c_str());
-		snprintf(tmpbuf, sizeof(tmpbuf), " -S \"%s\"", _spawn_config.jack_serv_name.c_str());	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -S \"%s\"", _spawn_config.jack_serv_name.c_str());
 		cmdstr += tmpbuf;
 	}
 
 	if (!_spawn_config.discrete_io) {
 		//cmdstr += wxString::Format(wxT(" -D \"no\""));
-		snprintf(tmpbuf, sizeof(tmpbuf), " -D no");	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -D no");
 		cmdstr += tmpbuf;
 	}
-	
+
 	if (!_spawn_config.session_path.empty()) {
 		//cmdstr += wxString::Format(wxT(" -L \"%s\""), _spawn_config.session_path.c_str());
 		cerr << "session path not empty when spawning: " << _spawn_config.session_path << endl;
-		snprintf(tmpbuf, sizeof(tmpbuf), " -L \"%s\"", _spawn_config.session_path.c_str());	
+		snprintf(tmpbuf, sizeof(tmpbuf), " -L \"%s\"", _spawn_config.session_path.c_str());
 		cmdstr += tmpbuf;
 	}
 
@@ -637,7 +638,7 @@ bool LoopControl::spawn_looper()
 //#ifdef DEBUG
 	cerr << "execing: '" << cmdstr.c_str() << "'" << endl << endl;
 //#endif
-	
+
 	_engine_pid = wxExecute(wxString::FromAscii(cmdstr.c_str()), wxEXEC_ASYNC|wxEXEC_MAKE_GROUP_LEADER);
 
 #ifdef DEBUG
@@ -646,7 +647,7 @@ bool LoopControl::spawn_looper()
 	if (_engine_pid > 0) {
 		_we_spawned = true;
 	}
-	
+
 	return _engine_pid > 0;
 }
 
@@ -668,7 +669,7 @@ LoopControl::pingack_handler(const char *path, const char *types, lo_arg **argv,
 	int loopcount = argv[2]->i;
 	int uid = 0;
 	char tmpbuf[100];
-	
+
 	if (argc > 3) {
 		uid = argv[3]->i;
 	}
@@ -684,7 +685,7 @@ LoopControl::pingack_handler(const char *path, const char *types, lo_arg **argv,
 	wxString tmpstr = wxString::FromAscii(remport);
 	tmpstr.ToLong(&_spawn_config.port);
 	free(remport);
-	
+
 	if (_lastchance) {
 		// force a 127.0.0.1 hostname if this was on our last chance
 		//cerr << "forced a 127" << endl;
@@ -694,7 +695,7 @@ LoopControl::pingack_handler(const char *path, const char *types, lo_arg **argv,
 	else {
 		_osc_url = hosturl;
 	}
-	
+
 	char * remhost = lo_url_get_hostname(_osc_url.c_str());
 	if (_spawn_config.host.empty() && !_lastchance) {
 		// only if the spawn config host was empty do we use what is returned
@@ -732,14 +733,14 @@ LoopControl::pingack_handler(const char *path, const char *types, lo_arg **argv,
 		// register future configs with it once
 		lo_send(_osc_addr, "/register", "ss", _our_url.c_str(), "/pingack");
 
-		register_global_updates();		
+		register_global_updates();
 
 		request_all_midi_bindings();
 
 		_pingack = true;
 	}
 
-	
+
 	LooperConnected (loopcount); // emit
 
 	return 0;
@@ -810,7 +811,7 @@ LoopControl::control_handler(const char *path, const char *types, lo_arg **argv,
 
 
 	// cerr << "got " << ctrl.ToAscii() << " = " << val << "  index=" << index << endl;
-	
+
 	if (index == -2)
 	{
 		// global ctrls
@@ -820,9 +821,9 @@ LoopControl::control_handler(const char *path, const char *types, lo_arg **argv,
 			_global_updated[ctrl] = true;
 
 		}
-	
+
 		_global_val_map[ctrl] = val;
-		
+
 		return 0;
 	}
 	else if (index < 0) {
@@ -838,10 +839,10 @@ LoopControl::control_handler(const char *path, const char *types, lo_arg **argv,
 	{
 		_updated[index][ctrl] = true;
 	}
-	
+
 	_params_val_map[index][ctrl] = val;
 
-	
+
 	return 0;
 }
 
@@ -859,9 +860,9 @@ LoopControl::midi_binding_handler(const char *path, const char *types, lo_arg **
 	// s:status s:serialized binding
 	string status(&argv[0]->s);
 	string bindstr(&argv[1]->s);
-	
+
 	MidiBindInfo info;
-	
+
 	if (status == "add") {
 		if (info.unserialize (bindstr)) {
 			_midi_bindings->add_binding(info);
@@ -881,7 +882,7 @@ LoopControl::midi_binding_handler(const char *path, const char *types, lo_arg **
 	else if (status == "next_cancel") {
 		NextMidiCancelled(); // emit
 	}
-	
+
 	return 0;
 }
 
@@ -892,7 +893,7 @@ LoopControl::request_control_value (int index,  wxString ctrl)
 	char buf[20];
 
 	snprintf(buf, sizeof(buf), "/sl/%d/get", index);
-	
+
 	lo_send(_osc_addr, buf, "sss", (const char *) ctrl.ToAscii(), _our_url.c_str(), "/ctrl");
 }
 
@@ -903,7 +904,7 @@ LoopControl::request_global_control_value (wxString ctrl)
 	char buf[20];
 
 	snprintf(buf, sizeof(buf), "/get");
-	
+
 	lo_send(_osc_addr, buf, "sss", (const char *) ctrl.ToAscii(), _our_url.c_str(), "/ctrl");
 }
 
@@ -914,7 +915,7 @@ LoopControl::request_global_values()
 	char buf[20];
 
 	snprintf(buf, sizeof(buf), "/get");
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", "tempo", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "sync_source", _our_url.c_str(), "/ctrl");
@@ -929,6 +930,7 @@ LoopControl::request_global_values()
 	lo_send(_osc_addr, buf, "sss", "use_midi_stop", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "use_midi_start", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "send_midi_start_on_trigger", _our_url.c_str(), "/ctrl");
+	lo_send(_osc_addr, buf, "sss", "midi_select_alternate_bindings", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "selected_loop_num", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "in_peak_meter", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "out_peak_meter", _our_url.c_str(), "/ctrl");
@@ -942,7 +944,7 @@ LoopControl::request_values(int index)
 	char buf[20];
 
 	snprintf(buf, sizeof(buf), "/sl/%d/get", index);
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", "state", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "loop_pos", _our_url.c_str(), "/ctrl");
@@ -968,7 +970,7 @@ LoopControl::request_all_values(int index)
 	snprintf(buf, sizeof(buf), "/sl/%d/get", index);
 
 	request_values(index);
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", "rec_thresh", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "feedback", _our_url.c_str(), "/ctrl");
@@ -1154,7 +1156,7 @@ LoopControl::register_auto_updates(int index, bool unreg)
                         // already registered
                         return;
                 }
-                
+
 
 		snprintf(buf, sizeof(buf), "/sl/%d/register_auto_update", index);
 		// send request for auto updates
@@ -1176,7 +1178,7 @@ LoopControl::register_auto_updates(int index, bool unreg)
                 _registeredauto_loop_map[index] = true;
 	}
 
-	
+
 
 }
 
@@ -1200,14 +1202,14 @@ LoopControl::register_input_controls(int index, bool unreg)
 		_params_val_map[index].clear();
 		_updated[index].clear();
 	}
-	
+
 	if (unreg) {
 		snprintf(buf, sizeof(buf), "/sl/%d/unregister_update", index);
 
 	} else {
 		snprintf(buf, sizeof(buf), "/sl/%d/register_update", index);
 	}
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", "rec_thresh", _our_url.c_str(), "/ctrl");
 	lo_send(_osc_addr, buf, "sss", "feedback", _our_url.c_str(), "/ctrl");
@@ -1260,14 +1262,14 @@ LoopControl::register_control (int index, wxString ctrl, bool unreg)
 		_params_val_map[index].clear();
 		_updated[index].clear();
 	}
-	
+
 	if (unreg) {
 		snprintf(buf, sizeof(buf), "/sl/%d/unregister_update", index);
 
 	} else {
 		snprintf(buf, sizeof(buf), "/sl/%d/register_update", index);
 	}
-	
+
 	// send request for updates
 	lo_send(_osc_addr, buf, "sss", (const char *) ctrl.ToAscii(), _our_url.c_str(), "/ctrl");
 
@@ -1290,7 +1292,7 @@ LoopControl::register_auto_update(int index, wxString ctrl, bool unreg)
 
 		lo_send(_osc_addr, buf, "siss", (const char *) ctrl.ToAscii(), 100, _our_url.c_str(), "/ctrl");
 	}
-	
+
 }
 
 
@@ -1301,7 +1303,7 @@ LoopControl::post_down_event(int index, wxString cmd)
 	char buf[50];
 
 	snprintf(buf, sizeof(buf), "/sl/%d/down", index);
-	
+
 	if (lo_send(_osc_addr, buf, "s", (const char *)cmd.ToAscii()) == -1) {
 		return false;
 	}
@@ -1321,7 +1323,7 @@ LoopControl::post_up_event(int index, wxString cmd, bool force)
 	else {
 		snprintf(buf, sizeof(buf), "/sl/%d/up", index);
 	}
-	
+
 	if (lo_send(_osc_addr, buf, "s", (const char *) cmd.ToAscii()) == -1) {
 		return false;
 	}
@@ -1339,7 +1341,7 @@ LoopControl::post_ctrl_change (int index, wxString ctrl, float val)
 	if (index >= 0 && index < (int) _params_val_map.size()) {
 		_params_val_map[index][ctrl] = val;
 	}
-	
+
 	snprintf(buf, sizeof(buf), "/sl/%d/set", index);
 
 	if (lo_send(_osc_addr, buf, "sf", (const char *) ctrl.ToAscii(), val) == -1) {
@@ -1356,7 +1358,7 @@ LoopControl::post_global_ctrl_change (wxString ctrl, float val)
 
 	// go ahead and update our local copy
 	_global_val_map[ctrl] = val;
-	
+
 	if (lo_send(_osc_addr, "/set", "sf", (const char *) ctrl.ToAscii(), val) == -1) {
 		return false;
 	}
@@ -1480,12 +1482,12 @@ LoopControl::is_updated (int index, wxString ctrl)
 
 	return false;
 }
-	
+
 bool
 LoopControl::get_value (int index, wxString ctrl, float & retval)
 {
 	bool ret = false;
-	
+
 	if (index >= 0 && index < (int) _params_val_map.size())
 	{
 		ControlValMap::iterator iter = _params_val_map[index].find (ctrl);
@@ -1506,7 +1508,7 @@ bool
 LoopControl::is_global_updated (wxString ctrl)
 {
         UpdatedCtrlMap::iterator iter = _global_updated.find (ctrl);
-	
+
 	if (iter != _global_updated.end()) {
 		return (*iter).second;
 	}
@@ -1518,9 +1520,9 @@ bool
 LoopControl::get_global_value (wxString ctrl, float & retval)
 {
 	bool ret = false;
-	
+
 	ControlValMap::iterator iter = _global_val_map.find (ctrl);
-	
+
 	if (iter != _global_val_map.end()) {
 		retval = (*iter).second;
 		// set updated to false
@@ -1599,11 +1601,10 @@ LoopControl::post_remove_loop()
 	if (!_osc_addr) return false;
 	// todo specify loop channels etc
 	int index = -1;
-	
+
 	if (lo_send(_osc_addr, "/loop_del", "i", index) == -1) {
 		return false;
 	}
 
 	return true;
 }
-
