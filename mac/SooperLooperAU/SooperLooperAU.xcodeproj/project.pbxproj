@@ -706,7 +706,6 @@
 		8855A6F508B59DE600B1396A /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = /usr/lib/libxml2.dylib; sourceTree = "<absolute>"; };
 		8855A8E908B77BBB00B1396A /* config.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = config.h; path = ../../config.h; sourceTree = SOURCE_ROOT; };
 		885670EB1813927400AA5367 /* SooperLooperAU64.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SooperLooperAU64.component; sourceTree = BUILT_PRODUCTS_DIR; };
-		885670EC1813927500AA5367 /* SooperLooperAU64-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "SooperLooperAU64-Info.plist"; path = "/Users/jesse/src/sooperlooper/mac/SooperLooperAU/SooperLooperAU64-Info.plist"; sourceTree = "<absolute>"; };
 		885F12540BD25EC60069E7EC /* atomic.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = atomic.h; path = ../../src/atomic.h; sourceTree = SOURCE_ROOT; };
 		885F12550BD25EC60069E7EC /* audio_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = audio_driver.cpp; path = ../../src/audio_driver.cpp; sourceTree = SOURCE_ROOT; };
 		885F12560BD25EC60069E7EC /* audio_driver.hpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = audio_driver.hpp; path = ../../src/audio_driver.hpp; sourceTree = SOURCE_ROOT; };
@@ -892,8 +891,6 @@
 		88A6E11C185903760099FEDF /* MusicDeviceBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MusicDeviceBase.h; sourceTree = "<group>"; };
 		88A6E11D185962940099FEDF /* SooperLooperCocoaUI.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SooperLooperCocoaUI.xib; sourceTree = "<group>"; };
 		88C5718418984DC400FD840A /* SooperLooperAU.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SooperLooperAU.component; sourceTree = BUILT_PRODUCTS_DIR; };
-		88C5718518984DC800FD840A /* SooperLooperAU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "SooperLooperAU-Info.plist"; path = "/Users/jesse/src/sooperlooper/mac/SooperLooperAU/SooperLooperAU-Info.plist"; sourceTree = "<absolute>"; };
-		88C571F518A0A75C00FD840A /* CocoaUI 32-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "CocoaUI 32-Info.plist"; path = "/Users/jesse/src/sooperlooper/mac/SooperLooperAU/CocoaUI 32-Info.plist"; sourceTree = "<absolute>"; };
 		88C571FE18A135DF00FD840A /* TaskWrapperNew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TaskWrapperNew.h; sourceTree = "<group>"; };
 		88C571FF18A135DF00FD840A /* TaskWrapperNew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TaskWrapperNew.m; sourceTree = "<group>"; };
 		88E4EA7518A15D0C0055D475 /* libfftw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfftw3.a; sourceTree = "<group>"; };
@@ -1045,9 +1042,6 @@
 				8836504C1858422D00246E75 /* CocoaUI */,
 				883650451858422D00246E75 /* Frameworks */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
-				885670EC1813927500AA5367 /* SooperLooperAU64-Info.plist */,
-				88C5718518984DC800FD840A /* SooperLooperAU-Info.plist */,
-				88C571F518A0A75C00FD840A /* CocoaUI 32-Info.plist */,
 			);
 			name = SooperLooperAU;
 			sourceTree = "<group>";
@@ -2367,8 +2361,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
-				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -2401,11 +2395,12 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				PRODUCT_NAME = SooperLooperCocoaViewFactory;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
+				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Development;
@@ -2415,8 +2410,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
-				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -2444,10 +2439,12 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				PRODUCT_NAME = SooperLooperCocoaViewFactory;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
+				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Deployment;
@@ -2457,8 +2454,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
-				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -2486,10 +2483,12 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				PRODUCT_NAME = SooperLooperCocoaViewFactory;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
+				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Default;

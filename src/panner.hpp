@@ -44,7 +44,7 @@ class StreamPanner : public sigc::trackable
 {
   public:
 	StreamPanner (Panner& p);
-	~StreamPanner ();
+	virtual ~StreamPanner ();
 
 	void set_muted (bool yn);
 	bool muted() const { return _muted; }
