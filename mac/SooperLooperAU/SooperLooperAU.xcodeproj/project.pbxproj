@@ -2571,7 +2571,7 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = iphoneos11.3;
+				SDKROOT = macosx10.13;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = macosx;
 				VALID_ARCHS = x86_64;
@@ -2660,7 +2660,7 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = iphoneos11.3;
+				SDKROOT = macosx10.13;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = macosx;
 				VALID_ARCHS = x86_64;
@@ -2747,7 +2747,7 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = iphoneos11.3;
+				SDKROOT = macosx10.13;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = macosx;
 				VALID_ARCHS = x86_64;
