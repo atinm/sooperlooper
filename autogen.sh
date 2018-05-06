@@ -298,7 +298,7 @@ AC_SUBST(ACLOCAL_AMFLAGS)
 
 BASE_LIBS="\$SOOPERLOOPER_TOP/libs/midi++/libmidipp.a \$SOOPERLOOPER_TOP/libs/pbd/libpbd.a"
 BASE_INCLUDES="-I\$SOOPERLOOPER_TOP/libs/pbd -I\$SOOPERLOOPER_TOP/libs/midi++"
-CFLAGS="\$CFLAGS  -I\$SOOPERLOOPER_TOP/libs/pbd -I\$SOOPERLOOPER_TOP/libs/midi++"
+CFLAGS="\$CFLAGS -I\$SOOPERLOOPER_TOP/libs/pbd -I\$SOOPERLOOPER_TOP/libs/midi++"
 CXXFLAGS="\$CXXFLAGS -I\$SOOPERLOOPER_TOP/libs/pbd -I\$SOOPERLOOPER_TOP/libs/midi++"
 #LIBS="\$LIBS \$SOOPERLOOPER_TOP/libs/midi++/libmidipp.a \$SOOPERLOOPER_TOP/libs/pbd/libpbd.a"
 ])

@@ -2499,6 +2499,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				BUILD_VARIANTS = normal;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUGGING_SYMBOLS = YES;
@@ -2525,8 +2527,15 @@
 					"/usr/local64/lib/sigc++-2.0/include",
 					/usr/local64/include/libxml2,
 					/usr/local64/include,
+					"/usr/local/Cellar/libsigc++/2.10.0/include/sigc++-2.0",
+					"/usr/local/Cellar/libsigc++/2.10.0/lib/sigc++-2.0/include",
+					/usr/local/Cellar/libsamplerate/0.1.8/include,
+					/usr/local/Cellar/liblo/0.29/include,
+					/usr/local/Cellar/libxml2/2.9.4/include/libxml2,
+					/usr/local/Cellar/libsndfile/1.0.26/include,
+					/usr/local/opt/rubberband/include,
 				);
-				INFOPLIST_FILE = "SooperLooperAU64-Info.plist";
+				INFOPLIST_FILE = info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
 				LIBRARY_SEARCH_PATHS = (
 					"../../libs/midi++",
@@ -2535,9 +2544,16 @@
 					/usr/local64/lib,
 					/usr/lib,
 					/Users/jesse/src/sooperlooper/mac/SooperLooperAU/lib64,
+					"/usr/local/Cellar/libsigc++/2.10.0/lib",
+					/usr/local/Cellar/libsamplerate/0.1.8/lib,
+					/usr/local/Cellar/liblo/0.29/lib,
+					/usr/local/Cellar/libxml2/2.9.4/lib,
+					/usr/local/Cellar/libsndfile/1.0.26/lib,
+					/usr/local/opt/rubberband/lib,
 				);
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-D_FILE_OFFSET_BITS=64",
 					"-D_LARGE_FILES",
@@ -2547,6 +2563,7 @@
 					"-DHAVE_SNDFILE",
 					"-DWITH_COREMIDI",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-bundle";
 				OTHER_REZFLAGS = "-d x86_64_$(x86_64) -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I /Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase";
 				PRODUCT_NAME = SooperLooperAU64;
@@ -2554,9 +2571,10 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = macosx10.8;
+				SDKROOT = iphoneos11.3;
 				SECTORDER_FLAGS = "";
-				VALID_ARCHS = "i386 x86_64";
+				SUPPORTED_PLATFORMS = macosx;
+				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -2572,6 +2590,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				BUILD_VARIANTS = normal;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -2596,8 +2616,15 @@
 					"/usr/local64/lib/sigc++-2.0/include",
 					/usr/local64/include/libxml2,
 					/usr/local64/include,
+					"/usr/local/Cellar/libsigc++/2.10.0/include/sigc++-2.0",
+					"/usr/local/Cellar/libsigc++/2.10.0/lib/sigc++-2.0/include",
+					/usr/local/Cellar/libsamplerate/0.1.8/include,
+					/usr/local/Cellar/liblo/0.29/include,
+					/usr/local/Cellar/libxml2/2.9.4/include/libxml2,
+					/usr/local/Cellar/libsndfile/1.0.26/include,
+					/usr/local/opt/rubberband/include,
 				);
-				INFOPLIST_FILE = "SooperLooperAU64-Info.plist";
+				INFOPLIST_FILE = info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
 				LIBRARY_SEARCH_PATHS = (
 					"../../libs/midi++",
@@ -2606,9 +2633,16 @@
 					/usr/local64/lib,
 					/usr/lib,
 					/Users/jesse/src/sooperlooper/mac/SooperLooperAU/lib64,
+					"/usr/local/Cellar/libsigc++/2.10.0/lib",
+					/usr/local/Cellar/libsamplerate/0.1.8/lib,
+					/usr/local/Cellar/liblo/0.29/lib,
+					/usr/local/Cellar/libxml2/2.9.4/lib,
+					/usr/local/Cellar/libsndfile/1.0.26/lib,
+					/usr/local/opt/rubberband/lib,
 				);
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-D_FILE_OFFSET_BITS=64",
 					"-D_LARGE_FILES",
@@ -2618,6 +2652,7 @@
 					"-DHAVE_SNDFILE",
 					"-DWITH_COREMIDI",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-bundle";
 				OTHER_REZFLAGS = "-d x86_64_$(x86_64) -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I /Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase";
 				PRODUCT_NAME = SooperLooperAU64;
@@ -2625,9 +2660,10 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = macosx10.8;
+				SDKROOT = iphoneos11.3;
 				SECTORDER_FLAGS = "";
-				VALID_ARCHS = "i386 x86_64";
+				SUPPORTED_PLATFORMS = macosx;
+				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -2643,6 +2679,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				BUILD_VARIANTS = normal;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = NO;
 				DEPLOYMENT_LOCATION = NO;
 				EXPORTED_SYMBOLS_FILE = Source/AUSource/SooperLooperAU64.exp;
@@ -2665,8 +2703,15 @@
 					"/usr/local64/lib/sigc++-2.0/include",
 					/usr/local64/include/libxml2,
 					/usr/local64/include,
+					"/usr/local/Cellar/libsigc++/2.10.0/include/sigc++-2.0",
+					"/usr/local/Cellar/libsigc++/2.10.0/lib/sigc++-2.0/include",
+					/usr/local/Cellar/libsamplerate/0.1.8/include,
+					/usr/local/Cellar/liblo/0.29/include,
+					/usr/local/Cellar/libxml2/2.9.4/include/libxml2,
+					/usr/local/Cellar/libsndfile/1.0.26/include,
+					/usr/local/opt/rubberband/include,
 				);
-				INFOPLIST_FILE = "SooperLooperAU64-Info.plist";
+				INFOPLIST_FILE = info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
 				LIBRARY_SEARCH_PATHS = (
 					"../../libs/midi++",
@@ -2675,9 +2720,16 @@
 					/usr/local64/lib,
 					/usr/lib,
 					/Users/jesse/src/sooperlooper/mac/SooperLooperAU/lib64,
+					"/usr/local/Cellar/libsigc++/2.10.0/lib",
+					/usr/local/Cellar/libsamplerate/0.1.8/lib,
+					/usr/local/Cellar/liblo/0.29/lib,
+					/usr/local/Cellar/libxml2/2.9.4/lib,
+					/usr/local/Cellar/libsndfile/1.0.26/lib,
+					/usr/local/opt/rubberband/lib,
 				);
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-D_FILE_OFFSET_BITS=64",
 					"-D_LARGE_FILES",
@@ -2687,6 +2739,7 @@
 					"-DHAVE_SNDFILE",
 					"-DWITH_COREMIDI",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-bundle";
 				OTHER_REZFLAGS = "-d x86_64_$(x86_64) -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I /Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase";
 				PRODUCT_NAME = SooperLooperAU64;
@@ -2694,9 +2747,10 @@
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
 					/Library/Developer/CoreAudio/AudioUnits/AUPublic/AUBase,
 				);
-				SDKROOT = macosx10.8;
+				SDKROOT = iphoneos11.3;
 				SECTORDER_FLAGS = "";
-				VALID_ARCHS = "i386 x86_64";
+				SUPPORTED_PLATFORMS = macosx;
+				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",

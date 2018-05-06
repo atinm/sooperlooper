@@ -15,19 +15,15 @@ cd SooperLooperAU
 #${xcodepath} ${xcodesdk} -configuration Deployment
 #xcodebuild -configuration Deployment
 
-xcodebuild -configuration Deployment -scheme "SooperLooperAU 32" -derivedDataPath .
+#xcodebuild -configuration Deployment -scheme "SooperLooperAU 32" -derivedDataPath .
 xcodebuild -configuration Deployment -scheme "SooperLooperAU 64" -derivedDataPath .
 
 
 cd ..
 
-if [ -d SooperLooperAU/Build/Products/Deployment/SooperLooperAU.component ] ; then
-	echo cp -Rp SooperLooperAU/Build/Products/Deployment/SooperLooperAU.component macdist/
-	cp -Rp SooperLooperAU/Build/Products/Deployment/SooperLooperAU.component macdist/	
-
+if [ -d SooperLooperAU/Build/Products/Deployment/SooperLooperAU64.component ] ; then
 	echo cp -Rp SooperLooperAU/Build/Products/Deployment/SooperLooperAU64.component macdist/
-	cp -Rp SooperLooperAU/Build/Products/Deployment/SooperLooperAU64.component macdist/	
-
+	cp -Rp SooperLooperAU/Build/Products/Deployment/SooperLooperAU64.component macdist/
 #if [ -d SooperLooperAU/build/Deployment/SooperLooperAU.component ] ; then
 #	echo cp -Rp SooperLooperAU/build/Deployment/SooperLooperAU.component macdist/
 #	cp -Rp SooperLooperAU/build/Deployment/SooperLooperAU.component macdist/	

@@ -195,6 +195,9 @@ if test "$ac_cv_prog_cxx" = "no" ; then
                        #   AC_MSG_ERROR([*** soop requires GTK+, but it doesn't appear to be installed])
                        #])
 
+# require c++-14
+AX_CXX_COMPILE_STDCXX_14(noext, mandatory)
+
 PKG_CHECK_MODULES(JACK, jack >= 0.80.0, have_jack=yes, have_jack=no)
 
 if test "x$have_jack" != "xno"

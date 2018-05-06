@@ -157,7 +157,7 @@ void MidiBindPanel::init()
 
 	_listctrl = new wxListCtrl(this, ID_ListCtrl, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxLC_SINGLE_SEL|wxSUNKEN_BORDER);
 	_listctrl->InsertColumn(0, wxT("Control"));
-	_listctrl->InsertColumn(1, wxT("Binding Set"));
+	_listctrl->InsertColumn(1, wxT("Set"));
 	_listctrl->InsertColumn(2, wxT("Loop#"));
 	_listctrl->InsertColumn(3, wxT("Midi Event"));
 	_listctrl->InsertColumn(4, wxT("Range"));
@@ -210,15 +210,14 @@ void MidiBindPanel::init()
 
 
 	rowsizer = new wxBoxSizer(wxHORIZONTAL);
-	staticText = new wxStaticText(_edit_panel, -1, wxT("Binding Set"), wxDefaultPosition, wxSize(-1, -1), wxALIGN_LEFT);
+	staticText = new wxStaticText(_edit_panel, -1, wxT("Set"), wxDefaultPosition, wxSize(-1, -1), wxALIGN_LEFT);
 	staticText->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 	rowsizer->Add (staticText, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 	_bindingSet_combo =  new wxChoice(_edit_panel, ID_BindingSetCombo, wxDefaultPosition, wxSize(100, -1), 0, 0);
 	_bindingSet_combo->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
-	for (int i=0; i <= 1; ++i) {
-		_bindingSet_combo->Append (wxString::Format(wxT("%d"), i), (void *) i);
-	}
+	_bindingSet_combo->Append (wxT("Default"), (void *) 0);
+  _bindingSet_combo->Append (wxT("Alternate"), (void *) 1);
 	_bindingSet_combo->SetSelection(0);
 	rowsizer->Add (_bindingSet_combo, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 	colsizer->Add (rowsizer, 0, wxALL|wxEXPAND, 0);
@@ -510,7 +509,7 @@ void MidiBindPanel::refresh_state()
 
 		// binding setting
 		item.SetColumn(1);
-		item.SetText (wxString::Format(wxT("%d"), info.set));
+    item.SetText (info.set == 0 ? wxT("Default") : wxT("Alternate"));
 		_listctrl->SetItem (item);
 
 		// loop #
